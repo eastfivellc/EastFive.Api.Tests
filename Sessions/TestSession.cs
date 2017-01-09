@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using BlackBarLabs.Api.Services;
 using BlackBarLabs.Web;
-using Microsoft.WindowsAzure;
 
 namespace BlackBarLabs.Api.Tests
 {
