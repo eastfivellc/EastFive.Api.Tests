@@ -40,10 +40,11 @@ namespace BlackBarLabs.Api.Tests
         public static async Task<TestSession> CreateAsync(string credentialToken, IProvideLogin loginProvider)
         {
             var session = new TestSession();
-            session.UpdateRequestPropertyFetch<IProvideLogin>(BlackBarLabs.Api.ServicePropertyDefinitions.IdentityService, loginProvider);
+            session.UpdateRequestPropertyFetch(ServicePropertyDefinitions.IdentityService, loginProvider);
             var response = session.PostAsync<EastFive.Security.SessionServer.Api.Controllers.SessionController>(
                 new EastFive.Security.SessionServer.Api.Resources.Session
                 {
+                    Id = Guid.NewGuid(),
                     CredentialToken = new EastFive.Security.SessionServer.Api.Resources.CredentialToken
                     {
                         Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.AzureADB2C,

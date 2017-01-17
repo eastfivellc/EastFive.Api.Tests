@@ -46,7 +46,43 @@ namespace EastFive.Api.Tests
         {
             if (!tokens.ContainsKey(idToken))
                 return onFailed("Token not found").ToTask();
-            return onSuccess(null).ToTask();
+            var claimType = Microsoft.Azure.CloudConfigurationManager.GetSetting(
+                        "BlackBarLabs.Security.CredentialProvider.AzureADB2C.ClaimType");
+            var claimValue = tokens[idToken].ToString();
+            var claim = new Claim(claimType, claimValue);
+            var identity = new ClaimsIdentity(
+                new[] { claim });
+            var claims = new ClaimsPrincipal(identity);
+            return onSuccess(claims).ToTask();
         }
     }
+    
+        public static class Extensions
+        {
+            public static void AddUpdateClaim(this System.Security.Principal.IPrincipal currentPrincipal, string key, string value)
+            {
+                var identity = currentPrincipal.Identity as ClaimsIdentity;
+                if (identity == null)
+                    return;
+
+                // check for existing claim and remove it
+                var existingClaim = identity.FindFirst(key);
+                if (existingClaim != null)
+                    identity.RemoveClaim(existingClaim);
+
+                // add new claim
+                identity.AddClaim(new Claim(key, value));
+            }
+
+            public static string GetClaimValue(this System.Security.Principal.IPrincipal currentPrincipal, string key)
+            {
+                var identity = currentPrincipal.Identity as ClaimsIdentity;
+                if (identity == null)
+                    return null;
+
+                var claim = identity.Claims.First(c => c.Type == key);
+                return claim.Value;
+            }
+        }
+
 }
