@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BlackBarLabs.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\BlackBarLabs.Core.1.2.0\lib\net452\BlackBarLabs.Core.dll</HintPath>
+      <HintPath>..\packages\BlackBarLabs.Core.1.2.5\lib\net45\BlackBarLabs.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="BlackBarLabs.Security, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -101,7 +101,7 @@
       <Project>{aaa1724b-0787-4ce1-bad5-e3c930db07c1}</Project>
       <Name>BlackBarLabs.Api</Name>
     </ProjectReference>
-    <ProjectReference Include="..\BlackBarLabs.SessionServer\BlackBarLabs.Security.SessionServer\EastFive.Security.SessionServer.csproj">
+    <ProjectReference Include="..\BlackBarLabs.SessionServer\EastFive.Security.SessionServer.csproj">
       <Project>{e2f3fcfb-89c8-47b3-b3d2-ae35e52a84fa}</Project>
       <Name>EastFive.Security.SessionServer</Name>
     </ProjectReference>
