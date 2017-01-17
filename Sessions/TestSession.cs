@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using BlackBarLabs.Api.Services;
 using BlackBarLabs.Web;
+using EastFive.Security.LoginProvider;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -34,6 +35,25 @@ namespace BlackBarLabs.Api.Tests
         {
             Id = Guid.NewGuid();
             Headers = new Dictionary<string, string>();
+        }
+
+        public static async Task<TestSession> CreateAsync(string credentialToken, IProvideLogin loginProvider)
+        {
+            var session = new TestSession();
+            session.UpdateRequestPropertyFetch<IProvideLogin>(BlackBarLabs.Api.ServicePropertyDefinitions.IdentityService, loginProvider);
+            var response = session.PostAsync<EastFive.Security.SessionServer.Api.Controllers.SessionController>(
+                new EastFive.Security.SessionServer.Api.Resources.Session
+                {
+                    CredentialToken = new EastFive.Security.SessionServer.Api.Resources.CredentialToken
+                    {
+                        Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.AzureADB2C,
+                        Token = credentialToken,
+                    },
+                });
+            var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(System.Net.HttpStatusCode.Created);
+            session.Id = sessionFromAuth.AuthorizationId;
+            session.Headers.Add(sessionFromAuth.SessionHeader.Name, sessionFromAuth.SessionHeader.Value);
+            return session;
         }
 
         public TestSession(Guid sessionId)

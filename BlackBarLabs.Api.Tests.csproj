@@ -85,6 +85,7 @@
     <Compile Include="Mocks\MockMailService.cs" />
     <Compile Include="Mocks\MockPrincipal.cs" />
     <Compile Include="Mocks\MockTimeService.cs" />
+    <Compile Include="Mocks\ProvideLoginMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sessions\ITestSession.cs" />
     <Compile Include="Sessions\TestSession.cs" />
@@ -99,6 +100,10 @@
     <ProjectReference Include="..\BlackBarLabs.Api\BlackBarLabs.Api.csproj">
       <Project>{aaa1724b-0787-4ce1-bad5-e3c930db07c1}</Project>
       <Name>BlackBarLabs.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BlackBarLabs.SessionServer\BlackBarLabs.Security.SessionServer\EastFive.Security.SessionServer.csproj">
+      <Project>{e2f3fcfb-89c8-47b3-b3d2-ae35e52a84fa}</Project>
+      <Name>EastFive.Security.SessionServer</Name>
     </ProjectReference>
     <ProjectReference Include="..\BlackBarLabs.Web\BlackBarLabs.Web.csproj">
       <Project>{5bb52391-2704-44c0-bc8a-dbbe31498814}</Project>
