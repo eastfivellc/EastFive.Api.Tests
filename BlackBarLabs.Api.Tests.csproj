@@ -80,7 +80,6 @@
   <ItemGroup>
     <Compile Include="AssertExtensions.cs" />
     <Compile Include="Examples\ExampleQuery.cs" />
-    <Compile Include="Extensions.cs" />
     <Compile Include="Helpers\HttpActionHelpers.cs" />
     <Compile Include="Mocks\MockMailService.cs" />
     <Compile Include="Mocks\MockPrincipal.cs" />
@@ -108,6 +107,10 @@
     <ProjectReference Include="..\BlackBarLabs.Web\BlackBarLabs.Web.csproj">
       <Project>{5bb52391-2704-44c0-bc8a-dbbe31498814}</Project>
       <Name>BlackBarLabs.Web</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EastFive.Api.Services\EastFive.Api.Services.csproj">
+      <Project>{662CD006-C03A-47CA-83E3-F327E595DB0F}</Project>
+      <Name>EastFive.Api.Services</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

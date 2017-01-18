@@ -9,9 +9,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using BlackBarLabs.Api.Services;
 using BlackBarLabs.Web;
 using EastFive.Security.LoginProvider;
+using BlackBarLabs.Extensions;
+using BlackBarLabs.Api.Tests.Mocks;
+using EastFive.Api.Services;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -20,13 +22,6 @@ namespace BlackBarLabs.Api.Tests
         public static async Task StartAsync(Func<TestSession, Task> callback)
         {
             var session = new TestSession();
-            session.UpdateRequestPropertyFetch(
-                BlackBarLabs.Api.ServicePropertyDefinitions.MailService,
-                new MockMailService());
-
-            session.UpdateRequestPropertyFetch<BlackBarLabs.Web.Services.ITimeService>(
-                BlackBarLabs.Api.ServicePropertyDefinitions.TimeService,
-                new TimeService());
             var callbackTask = callback(session);
             await callbackTask;
         }
@@ -35,37 +30,88 @@ namespace BlackBarLabs.Api.Tests
         {
             Id = Guid.NewGuid();
             Headers = new Dictionary<string, string>();
+            Init();
         }
 
-        public static async Task<TestSession> CreateAsync(string credentialToken, IProvideLogin loginProvider)
+        public TestSession(Guid actorId)
         {
-            var session = new TestSession();
-            session.UpdateRequestPropertyFetch(ServicePropertyDefinitions.IdentityService, loginProvider);
-            var response = session.PostAsync<EastFive.Security.SessionServer.Api.Controllers.SessionController>(
+            Id = actorId;
+            Headers = new Dictionary<string, string>();
+            var token = BlackBarLabs.Api.Tests.TestSession.CreateToken(actorId);
+            Headers.Add("Authorization", token);
+            Init();
+        }
+
+        private void Init()
+        {
+            this.UpdateRequestPropertyFetch(
+                BlackBarLabs.Api.ServicePropertyDefinitions.IdentityService,
+                ((IIdentityService)LoginService).ToTask());
+            this.UpdateRequestPropertyFetch<ISendMessageService>(
+                BlackBarLabs.Api.ServicePropertyDefinitions.MailService,
+                MailService);
+            this.UpdateRequestPropertyFetch<ITimeService>(
+                BlackBarLabs.Api.ServicePropertyDefinitions.TimeService,
+                TimeService);
+        }
+
+        public Guid Id { get; set; }
+
+        private static EastFive.Api.Tests.ProvideLoginMock loginService =
+            default(EastFive.Api.Tests.ProvideLoginMock);
+        public EastFive.Api.Tests.ProvideLoginMock LoginService
+        {
+            get
+            {
+                if(default(EastFive.Api.Tests.ProvideLoginMock) == loginService)
+                    loginService = new EastFive.Api.Tests.ProvideLoginMock();
+                return loginService;
+            }
+        }
+
+        private static MockMailService mailService =
+            default(MockMailService);
+        public MockMailService MailService
+        {
+            get
+            {
+                if (default(MockMailService) == mailService)
+                    mailService = new MockMailService();
+                return mailService;
+            }
+        }
+
+        private static MockTimeService timeService =
+            default(MockTimeService);
+        public MockTimeService TimeService
+        {
+            get
+            {
+                if (default(MockTimeService) == timeService)
+                    timeService = new MockTimeService();
+                return timeService;
+            }
+        }
+
+        #region Methods
+
+        public async Task CreateSessionAsync(string credentialToken)
+        {
+            var response = this.PostAsync<EastFive.Security.SessionServer.Api.Controllers.SessionController>(
                 new EastFive.Security.SessionServer.Api.Resources.Session
                 {
-                    Id = Guid.NewGuid(),
+                    Id = this.Id,
                     CredentialToken = new EastFive.Security.SessionServer.Api.Resources.CredentialToken
                     {
                         Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.AzureADB2C,
                         Token = credentialToken,
                     },
                 });
-            var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(System.Net.HttpStatusCode.Created);
-            session.Id = sessionFromAuth.AuthorizationId;
-            session.Headers.Add(sessionFromAuth.SessionHeader.Name, sessionFromAuth.SessionHeader.Value);
-            return session;
+            var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(
+                System.Net.HttpStatusCode.Created);
+            Assert.AreEqual(this.Id, sessionFromAuth.AuthorizationId);
+            this.Headers.Add(sessionFromAuth.SessionHeader.Name, sessionFromAuth.SessionHeader.Value);
         }
-
-        public TestSession(Guid sessionId)
-        {
-            Id = sessionId;
-            Headers = new Dictionary<string, string>();
-        }
-
-        public Guid Id { get; set; }
-        
-        #region Methods
 
         public async Task<HttpResponseMessage> PostAsync<TController>(object resource,
                 Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
@@ -214,8 +260,7 @@ namespace BlackBarLabs.Api.Tests
         }
 
         #endregion
-
-
+        
         private Dictionary<string, object> requestPropertyObjects = new Dictionary<string, object>();
         private Dictionary<string, object> requestPropertyFetches = new Dictionary<string, object>();
         
@@ -257,19 +302,37 @@ namespace BlackBarLabs.Api.Tests
                 hostingLocation = "http://example.com";
             var httpRequest = new HttpRequestMessage(method, hostingLocation);
             var config = new HttpConfiguration();
-            var route = config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
-            httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
-            route = config.Routes.MapHttpRoute(
-                name: "Default",
-                routeTemplate: "{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
-            httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
 
+            var routesApi = Microsoft.Azure.CloudConfigurationManager.GetSetting("BlackBarLabs.Api.Tests.RoutesApi");
+            if (String.IsNullOrWhiteSpace(routesApi))
+                routesApi = "DefaultApi";
+            var routesMvc = Microsoft.Azure.CloudConfigurationManager.GetSetting("BlackBarLabs.Api.Tests.RoutesMvc");
+            if (String.IsNullOrWhiteSpace(routesMvc))
+                routesMvc = "Default";
+
+            routesApi.Split(new[] { ',' }).Select(
+                routeName =>
+                {
+                    var route = config.Routes.MapHttpRoute(
+                        name: routeName,
+                        routeTemplate: routeName + "/{controller}/{id}",
+                        defaults: new { id = RouteParameter.Optional }
+                    );
+                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+                    return route;
+                }).ToArray();
+            routesMvc.Split(new[] { ',' }).Select(
+                routeName =>
+                {
+                    var route = config.Routes.MapHttpRoute(
+                        name: "Default",
+                        routeTemplate: "{controller}/{id}",
+                        defaults: new { id = RouteParameter.Optional }
+                        );
+                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+                    return route;
+                }).ToArray();
+            
             httpRequest.SetConfiguration(config);
 
             foreach(var requestPropertyKvp in requestPropertyFetches)
