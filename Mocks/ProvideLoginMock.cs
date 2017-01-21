@@ -116,6 +116,11 @@ namespace EastFive.Api.Tests
             var claims = new ClaimsPrincipal(identity);
             return onSuccess(claims).ToTask();
         }
+
+        public Task DeleteLoginAsync(Guid loginId)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

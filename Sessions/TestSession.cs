@@ -67,6 +67,10 @@ namespace BlackBarLabs.Api.Tests
                     loginService = new EastFive.Api.Tests.ProvideLoginMock();
                 return loginService;
             }
+            set
+            {
+                loginService = value;
+            }
         }
 
         private static MockMailService mailService =
@@ -103,7 +107,7 @@ namespace BlackBarLabs.Api.Tests
                     Id = this.Id,
                     CredentialToken = new EastFive.Security.SessionServer.Api.Resources.CredentialToken
                     {
-                        Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.AzureADB2C,
+                        Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.Password,
                         Token = credentialToken,
                     },
                 });
