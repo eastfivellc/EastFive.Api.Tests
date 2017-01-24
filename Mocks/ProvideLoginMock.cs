@@ -38,7 +38,7 @@ namespace EastFive.Api.Tests
 
         public Uri GetLoginUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
         {
-            return (new Uri("http://example.com"))
+            return (new Uri("http://example.com/login"))
                 .AddQuery("redirect", redirect_uri)
                 .AddQuery("mode", ((int)mode).ToString())
                 .AddQuery("data", Convert.ToBase64String(state))
@@ -47,7 +47,16 @@ namespace EastFive.Api.Tests
 
         public Uri GetSignupUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
         {
-            return (new Uri("http://example.com"))
+            return (new Uri("http://example.com/signup"))
+                .AddQuery("redirect", redirect_uri)
+                .AddQuery("mode", ((int)mode).ToString())
+                .AddQuery("data", Convert.ToBase64String(state))
+                .AddQuery("state", GetState(redirect_uri, mode, state));
+        }
+
+        public Uri GetLogoutUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
+        {
+            return (new Uri("http://example.com/logout"))
                 .AddQuery("redirect", redirect_uri)
                 .AddQuery("mode", ((int)mode).ToString())
                 .AddQuery("data", Convert.ToBase64String(state))
