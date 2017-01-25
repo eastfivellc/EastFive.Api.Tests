@@ -22,8 +22,10 @@ namespace EastFive.Api.Tests
         private Dictionary<string, Guid> tokens = new Dictionary<string, Guid>();
 
         public Task<TResult> CreateLoginAsync<TResult>(string displayName,
-            string userId, bool isEmail, string secret, bool forceChange, 
-            Func<Guid, TResult> onSuccess, 
+            string userId, bool isEmail, string secret, bool forceChange,
+            Func<Guid, TResult> onSuccess,
+            Func<Guid, TResult> usernameAlreadyInUse,
+            Func<TResult> onPasswordInsufficent,
             Func<string, TResult> onFail)
         {
             var loginId = Guid.NewGuid();
