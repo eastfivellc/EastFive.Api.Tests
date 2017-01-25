@@ -130,6 +130,11 @@ namespace EastFive.Api.Tests
         {
             throw new NotImplementedException();
         }
+
+        public Task<TResult> GetLoginAsync<TResult>(Guid loginId, Func<string, bool, bool, TResult> onSuccess, Func<TResult> onNotFound, Func<string, TResult> onServiceNotAvailable)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }
