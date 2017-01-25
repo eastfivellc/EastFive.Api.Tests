@@ -131,7 +131,15 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        public Task<TResult> GetLoginAsync<TResult>(Guid loginId, Func<string, bool, bool, TResult> onSuccess, Func<TResult> onNotFound, Func<string, TResult> onServiceNotAvailable)
+        public async Task<TResult> GetLoginAsync<TResult>(Guid loginId, 
+            Func<string, bool, bool, TResult> onSuccess, 
+            Func<TResult> onNotFound,
+            Func<string, TResult> onServiceNotAvailable)
+        {
+            return await onSuccess("mock", true, true).ToTask();
+        }
+
+        public TResult UpdateLoginPassword<TResult>(string password, Func<TResult> onSuccess, Func<string, TResult> onFailure)
         {
             throw new NotImplementedException();
         }
