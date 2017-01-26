@@ -130,7 +130,8 @@ namespace EastFive.Api.Tests
 
         public Task DeleteLoginAsync(Guid loginId)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return 1.ToTask();
         }
 
         public async Task<TResult> GetLoginAsync<TResult>(Guid loginId, 
