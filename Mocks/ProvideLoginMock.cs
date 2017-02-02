@@ -142,7 +142,7 @@ namespace EastFive.Api.Tests
             return await onSuccess("mock", true, true).ToTask();
         }
 
-        public TResult UpdateLoginPassword<TResult>(string password, Func<TResult> onSuccess, Func<string, TResult> onFailure)
+        public Task<TResult> UpdateLoginPasswordAsync<TResult>(Guid loginId, string password, bool forceChange, Func<TResult> onSuccess, Func<string, TResult> onServiceNotAvailable, Func<string, TResult> onFailure)
         {
             throw new NotImplementedException();
         }
