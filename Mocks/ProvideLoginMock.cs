@@ -147,9 +147,11 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        public Task<TResult> CreateOrUpdateClaim<TResult>(string claimType, string claimValue, Func<TResult> onSuccess, Func<string, TResult> onFailure)
+        public Task<TResult> CreateOrUpdateClaim<TResult>(string claimType, string claimValue, 
+            Func<TResult> onSuccess, 
+            Func<string, TResult> onFailure)
         {
-            throw new NotImplementedException();
+            return onSuccess().ToTask();
         }
     }
 
