@@ -42,6 +42,15 @@ namespace BlackBarLabs.Api.Tests
             Init();
         }
 
+        public TestSession(Guid actorId, Dictionary<string, string> claims )
+        {
+            Id = actorId;
+            Headers = new Dictionary<string, string>();
+            var token = BlackBarLabs.Api.Tests.TestSession.CreateToken(actorId);
+            Headers.Add("Authorization", token);
+            Init();
+        }
+
         private void Init()
         {
             this.UpdateRequestPropertyFetch(

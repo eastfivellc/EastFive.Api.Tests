@@ -112,6 +112,11 @@ namespace EastFive.Api.Tests
             return onSuccess(url, mode, data);
         }
 
+        public Task<TResult> CreateOrUpdateClaim<TResult>(Guid accountId, string claimType, string claimValue, Func<TResult> onSuccess, Func<string, TResult> onFailure)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<TResult> ValidateToken<TResult>(string idToken,
             Func<ClaimsPrincipal, TResult> onSuccess,
             Func<string, TResult> onFailed)
