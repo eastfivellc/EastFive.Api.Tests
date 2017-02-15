@@ -42,6 +42,15 @@ namespace BlackBarLabs.Api.Tests
             Init();
         }
 
+        public TestSession(Guid actorId, IDictionary<string, string> claims)
+        {
+            Id = actorId;
+            Headers = new Dictionary<string, string>();
+            var token = BlackBarLabs.Api.Tests.TestSession.CreateToken(actorId, claims);
+            Headers.Add("Authorization", token);
+            Init();
+        }
+
         private void Init()
         {
             this.UpdateRequestPropertyFetch(
@@ -173,6 +182,18 @@ namespace BlackBarLabs.Api.Tests
         {
             var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), userId,
                 new Uri("http://test.example.com"), TimeSpan.FromHours(1.0),
+                (tokenNew) => tokenNew,
+                (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
+                (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; },
+                "AuthServer.issuer",
+                "AuthServer.key");
+            return token;
+        }
+
+        public static string CreateToken(Guid userId, IDictionary<string, string> claims)
+        {
+            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), userId,
+                new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                 (tokenNew) => tokenNew,
                 (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
                 (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; },
