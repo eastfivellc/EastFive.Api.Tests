@@ -14,6 +14,8 @@ using EastFive.Security.LoginProvider;
 using BlackBarLabs.Extensions;
 using BlackBarLabs.Api.Tests.Mocks;
 using EastFive.Api.Services;
+using System.Configuration;
+using BlackBarLabs.Collections.Generic;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -30,6 +32,13 @@ namespace BlackBarLabs.Api.Tests
         {
             Id = Guid.NewGuid();
             Headers = new Dictionary<string, string>();
+            Init();
+        }
+
+        public TestSession(string authorization)
+        {
+            Headers = new Dictionary<string, string>();
+            Headers.Add("Authorization", authorization);
             Init();
         }
 
@@ -178,10 +187,14 @@ namespace BlackBarLabs.Api.Tests
             return response;
         }
 
-        public static string CreateToken(Guid userId)
+        public static string CreateToken(Guid actorId)
         {
-            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), userId,
-                new Uri("http://test.example.com"), TimeSpan.FromHours(1.0),
+            var claims = new Dictionary<string, string>();
+            var actorIdClaimType = ConfigurationManager.AppSettings[EastFive.Api.Configuration.SecurityDefinitions.ActorIdClaimType];
+            claims.AddOrReplace(actorIdClaimType, actorId.ToString());
+
+            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
+                new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                 (tokenNew) => tokenNew,
                 (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
                 (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; },
@@ -190,9 +203,11 @@ namespace BlackBarLabs.Api.Tests
             return token;
         }
 
-        public static string CreateToken(Guid userId, IDictionary<string, string> claims)
+        public static string CreateToken(Guid actorId, IDictionary<string, string> claims)
         {
-            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), userId,
+            var actorIdClaimType = ConfigurationManager.AppSettings[EastFive.Api.Configuration.SecurityDefinitions.ActorIdClaimType];
+            claims.AddOrReplace(actorIdClaimType, actorId.ToString());
+            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
                 new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                 (tokenNew) => tokenNew,
                 (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
