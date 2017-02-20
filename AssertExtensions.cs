@@ -89,5 +89,28 @@ namespace BlackBarLabs.Api.Tests
                     Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail("Item {0} is not valid", item.ToString());
             }
         }
+
+        public static Resources.WebId AssertEquals(this Resources.WebId item1, Resources.WebId item2)
+        {
+            Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(item1.UUID, item2.UUID);
+            return item1;
+        }
+
+        public static T AssertIdEquals<T>(this T resource, Resources.WebId item2)
+            where T : BlackBarLabs.Api.ResourceBase
+        {
+            resource.Id.AssertEquals(item2);
+            return resource;
+        }
+        public static T1 AssertPropertyEquals<T1, T2>(this T1 resource1,
+                T1 resource2,
+                Func<T1, T2> propertyDefinition)
+            where T1 : BlackBarLabs.Api.ResourceBase
+        {
+            var value1 = propertyDefinition(resource1);
+            var value2 = propertyDefinition(resource2);
+            Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(value1, value2);
+            return resource1;
+        }
     }
 }
