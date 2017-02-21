@@ -92,6 +92,16 @@ namespace BlackBarLabs.Api.Tests
 
         public static Resources.WebId AssertEquals(this Resources.WebId item1, Resources.WebId item2)
         {
+            if(default(Resources.WebId) == item1)
+            {
+                if(default(Resources.WebId) != item2)
+                    Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail($"{item1} not equal to {item2.UUID}");
+                return item1;
+            }
+
+            if (default(Resources.WebId) == item2)
+                Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail($"{item1.UUID} not equal to {item2}");
+
             Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(item1.UUID, item2.UUID);
             return item1;
         }
