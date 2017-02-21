@@ -41,6 +41,8 @@ namespace BlackBarLabs.Api.Tests
                     {
                         try
                         {
+                            if (null == response.Content)
+                                Assert.Fail($"Response was empty: {response}");
                             return Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(resource.Content as string).ToEnumerable();
                         }
                         catch (JsonSerializationException)
