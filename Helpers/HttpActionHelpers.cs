@@ -18,6 +18,7 @@ namespace BlackBarLabs.Api.Tests
         public static IEnumerable<TModel> GetContentMultipart<TModel>(this HttpResponseMessage response)
             where TModel : class
         {
+            response.Assert(HttpStatusCode.OK);
             var contentIEnumerable = response.Content as ObjectContent<IEnumerable<TModel>>;
             if (default(ObjectContent<IEnumerable<TModel>>) != contentIEnumerable)
                 return (IEnumerable<TModel>)contentIEnumerable.Value;
@@ -41,7 +42,7 @@ namespace BlackBarLabs.Api.Tests
                     {
                         try
                         {
-                            if (null == response.Content)
+                            if (null == resource.Content)
                                 Assert.Fail($"Response was empty: {response}");
                             return Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(resource.Content as string).ToEnumerable();
                         }
