@@ -15,7 +15,8 @@ namespace BlackBarLabs.Api.Tests
         {
             if (HttpStatusCode.Accepted != response.StatusCode &&
                 HttpStatusCode.OK != response.StatusCode &&
-                HttpStatusCode.NoContent != response.StatusCode)
+                HttpStatusCode.NoContent != response.StatusCode &&
+                HttpStatusCode.NotModified != response.StatusCode)
             {
                 Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail("Status code: [{0}]\rReason:{1}",
                     response.StatusCode, response.ReasonPhrase);

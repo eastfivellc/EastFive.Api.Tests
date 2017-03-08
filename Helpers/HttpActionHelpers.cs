@@ -42,6 +42,8 @@ namespace BlackBarLabs.Api.Tests
                     {
                         try
                         {
+                            if (HttpStatusCode.OK != resource.StatusCode)
+                                Assert.Fail($"One of multipart responses returned [{response.StatusCode}]: {resource}");
                             if (null == resource.Content)
                                 Assert.Fail($"Response was empty: {response}");
                             return Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(resource.Content as string).ToEnumerable();
