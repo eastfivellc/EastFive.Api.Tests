@@ -32,16 +32,7 @@ namespace BlackBarLabs.Api.Tests
 
         #endregion
         
-        public static Guid GetUserId(this ITestSession session)
-        {
-            var authorizationHeader = session.Headers["Authorization"];
-            var userId = authorizationHeader.GetClaimsJwtString(
-                (claims) => claims.GetAccountId(
-                    (accountId) => accountId,
-                    () => Guid.Empty),
-                (why) => Guid.Empty);
-            return userId;
-        }
+        
 
     }
 }
