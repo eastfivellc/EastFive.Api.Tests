@@ -91,6 +91,14 @@ namespace BlackBarLabs.Api.Tests
             }
         }
 
+        public static void AssertAll<T>(this IEnumerable<T> items1, IEnumerable<T> items2, Func<T, T, bool> assertEqual)
+        {
+            foreach (var item1 in items1)
+            {
+                items2.AssertContains(item2 => assertEqual(item1, item2));
+            }
+        }
+
         public static Resources.WebId AssertEquals(this Resources.WebId item1, Resources.WebId item2)
         {
             if(default(Resources.WebId) == item1)
