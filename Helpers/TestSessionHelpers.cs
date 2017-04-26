@@ -30,9 +30,17 @@ namespace BlackBarLabs.Api.Tests
             multipart.Add(streamContent);
         }
 
+        public static void AddContent(this MultipartContent multipart, string name, byte [] content)
+        {
+            var byteContent = new ByteArrayContent(content);
+            byteContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("file");
+            byteContent.Headers.ContentDisposition.Name = String.Format("\"{0}\"", name);
+            multipart.Add(byteContent);
+        }
+
         #endregion
-        
-        
+
+
 
     }
 }

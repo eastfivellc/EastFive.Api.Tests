@@ -492,35 +492,40 @@ namespace BlackBarLabs.Api.Tests
             }
             return response;
         }
-
-        private delegate void InvokeControllerDelegate(HttpRequestMessage request, MockPrincipal user);
+        
         private async Task<HttpResponseMessage> InvokeControllerAsync<TController>(
                 TController controller,
                 HttpMethod method,
-                InvokeControllerDelegate callback)
+                Action<HttpRequestMessage, System.Reflection.MethodInfo> callback)
             where TController : ApiController
         {
-            var httpRequest = GetRequest(controller, method);
-
-            callback(httpRequest, controller.User as MockPrincipal);
-
-            var methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(method.ToString().ToLower());
-            var methodInfo = typeof(TController).GetMethod(methodName);
-
-            if (methodInfo.GetParameters().Length != 0)
-                Assert.Fail("Wrong InvokeControllerAsync method called, this one is for parameterless methods");
-
-            var resultTask = (Task<IHttpActionResult>)methodInfo.Invoke(controller, new object[] {});
-            var result = await resultTask;
-            var response = await result.ExecuteAsync(CancellationToken.None);
-            foreach (var header in response.Headers)
-            {
-                if (String.Compare(header.Key, "Set-Cookie", true) == 0)
+            return await InvokeControllerAsync<TController>(controller, method,
+                (request, methodInfo) =>
                 {
-                    // TODO: Store these for next request
-                }
-            }
-            return response;
+                    callback(request, methodInfo);
+                    return (new object[] { });
+                });
+            //var httpRequest = GetRequest(controller, method);
+
+            //callback(httpRequest, controller.User as MockPrincipal);
+
+            //var methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(method.ToString().ToLower());
+            //var methodInfo = typeof(TController).GetMethod(methodName);
+
+            //if (methodInfo.GetParameters().Length != 0)
+            //    Assert.Fail("Wrong InvokeControllerAsync method called, this one is for parameterless methods");
+
+            //var resultTask = (Task<IHttpActionResult>)methodInfo.Invoke(controller, new object[] {});
+            //var result = await resultTask;
+            //var response = await result.ExecuteAsync(CancellationToken.None);
+            //foreach (var header in response.Headers)
+            //{
+            //    if (String.Compare(header.Key, "Set-Cookie", true) == 0)
+            //    {
+            //        // TODO: Store these for next request
+            //    }
+            //}
+            //return response;
         }
     }
 }
