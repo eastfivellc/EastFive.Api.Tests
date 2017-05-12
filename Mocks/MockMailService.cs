@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BlackBarLabs.Web;
+using EastFive.Api.Services;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -23,6 +24,11 @@ namespace BlackBarLabs.Api.Tests
                 toAddress, toName, fromAddress, fromName,
                 subject, substitutionsSingle);
             return onSuccess(Guid.NewGuid().ToString());
+        }
+
+        public Task<SendMessageTemplate[]> ListTemplatesAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }
