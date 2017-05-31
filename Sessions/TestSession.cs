@@ -197,9 +197,7 @@ namespace BlackBarLabs.Api.Tests
                 new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                 (tokenNew) => tokenNew,
                 (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
-                (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; },
-                "AuthServer.issuer",
-                "AuthServer.key");
+                (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; });
             return token;
         }
 
@@ -211,9 +209,7 @@ namespace BlackBarLabs.Api.Tests
                 new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                 (tokenNew) => tokenNew,
                 (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
-                (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; },
-                "AuthServer.issuer",
-                "AuthServer.key");
+                (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; });
             return token;
         }
 

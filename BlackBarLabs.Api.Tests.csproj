@@ -34,10 +34,6 @@
       <HintPath>..\packages\BlackBarLabs.Core.1.2.5\lib\net45\BlackBarLabs.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="BlackBarLabs.Security, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\BlackBarLabs.Security.0.4.3\lib\BlackBarLabs.Security.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.IdentityModel.Logging">
       <HintPath>..\packages\Microsoft.IdentityModel.Logging.1.1.2\lib\net451\Microsoft.IdentityModel.Logging.dll</HintPath>
       <Private>True</Private>
@@ -99,6 +95,10 @@
     <ProjectReference Include="..\BlackBarLabs.Api\BlackBarLabs.Api.csproj">
       <Project>{aaa1724b-0787-4ce1-bad5-e3c930db07c1}</Project>
       <Name>BlackBarLabs.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BlackBarLabs.Security\BlackBarLabs.Security.csproj">
+      <Project>{17a2e027-c32a-41db-9b46-5222d55c0e26}</Project>
+      <Name>BlackBarLabs.Security</Name>
     </ProjectReference>
     <ProjectReference Include="..\BlackBarLabs.SessionServer\EastFive.Security.SessionServer.csproj">
       <Project>{e2f3fcfb-89c8-47b3-b3d2-ae35e52a84fa}</Project>

@@ -123,8 +123,8 @@ namespace EastFive.Api.Tests
         {
             if (!tokens.ContainsKey(idToken))
                 return onFailed("Token not found").ToTask();
-            var claimType = Microsoft.Azure.CloudConfigurationManager.GetSetting(
-                        "BlackBarLabs.Security.CredentialProvider.AzureADB2C.ClaimType");
+            var claimType = EastFive.Web.Configuration.Settings.Get(
+                        EastFive.Security.SessionServer.Configuration.AppSettings.LoginIdClaimType);
             var claimValue = tokens[idToken].ToString();
             var claim = new Claim(claimType, claimValue);
             var identity = new ClaimsIdentity(
