@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BlackBarLabs.Web;
 using EastFive.Api.Services;
+using BlackBarLabs.Extensions;
 
 namespace BlackBarLabs.Api.Tests
 {
     public class MockMailService : EastFive.Api.Services.ISendMessageService
     {
+        public const string OrderTemplate1Name = "Order Template1";
+        public const string OrderTemplate2Name = "Order Template2";
+
         public delegate Task SendEmailMessageDelegate(string templateName, string toAddress, string toName, string fromAddress, string fromName,
             string subject, IDictionary<string, string> substitutionsSingle);
 
@@ -28,7 +32,19 @@ namespace BlackBarLabs.Api.Tests
 
         public Task<SendMessageTemplate[]> ListTemplatesAsync()
         {
-            throw new NotImplementedException();
+            return (new SendMessageTemplate[]
+            {
+                new SendMessageTemplate
+                {
+                    name = OrderTemplate1Name,
+                    externalTemplateId = Guid.NewGuid().ToString("N"),
+                },
+                new SendMessageTemplate
+                {
+                    name = OrderTemplate2Name,
+                    externalTemplateId = Guid.NewGuid().ToString("N"),
+                },
+            }).ToTask();
         }
     }
 }

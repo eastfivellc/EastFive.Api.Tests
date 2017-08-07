@@ -159,9 +159,10 @@ namespace EastFive.Api.Tests
             return onSuccess().ToTask();
         }
 
-        public TResult ParseState<TResult>(string state, Func<byte, byte[], IDictionary<string, string>, TResult> onSuccess, Func<string, TResult> invalidState)
+        public TResult ParseState<TResult>(string state,
+            Func<byte, byte[], IDictionary<string, string>, TResult> onSuccess, Func<string, TResult> invalidState)
         {
-            throw new NotImplementedException();
+            return onSuccess(0, new byte[] { }, new Dictionary<string, string>());
         }
     }
 

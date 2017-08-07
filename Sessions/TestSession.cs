@@ -16,6 +16,7 @@ using BlackBarLabs.Api.Tests.Mocks;
 using EastFive.Api.Services;
 using System.Configuration;
 using BlackBarLabs.Collections.Generic;
+using System.Net.Http.Headers;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -146,7 +147,7 @@ namespace BlackBarLabs.Api.Tests
                     return resource;
                 });
         }
-        
+
         public async Task<HttpResponseMessage> PostMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
             where TController : ApiController
         {
@@ -501,27 +502,6 @@ namespace BlackBarLabs.Api.Tests
                     callback(request, methodInfo);
                     return (new object[] { });
                 });
-            //var httpRequest = GetRequest(controller, method);
-
-            //callback(httpRequest, controller.User as MockPrincipal);
-
-            //var methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(method.ToString().ToLower());
-            //var methodInfo = typeof(TController).GetMethod(methodName);
-
-            //if (methodInfo.GetParameters().Length != 0)
-            //    Assert.Fail("Wrong InvokeControllerAsync method called, this one is for parameterless methods");
-
-            //var resultTask = (Task<IHttpActionResult>)methodInfo.Invoke(controller, new object[] {});
-            //var result = await resultTask;
-            //var response = await result.ExecuteAsync(CancellationToken.None);
-            //foreach (var header in response.Headers)
-            //{
-            //    if (String.Compare(header.Key, "Set-Cookie", true) == 0)
-            //    {
-            //        // TODO: Store these for next request
-            //    }
-            //}
-            //return response;
         }
     }
 }
