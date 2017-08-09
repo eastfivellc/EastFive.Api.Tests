@@ -12,39 +12,44 @@ namespace EastFive.Api.Tests
 {
     public static class AssertApi
     {
-        public static void AssertStatusCode(HttpStatusCode statusCode, HttpResponseMessage response)
+        public static void StatusCodeIs(HttpStatusCode statusCode, HttpResponseMessage response)
         {
             response.Assert(statusCode);
         }
 
-        public static void AssertCreated(HttpResponseMessage response)
+        public static void Created(HttpResponseMessage response)
         {
-            AssertStatusCode(HttpStatusCode.Created, response);
+            StatusCodeIs(HttpStatusCode.Created, response);
         }
 
-        public static void AssertAccepted(HttpResponseMessage response)
+        public static void Accepted(HttpResponseMessage response)
         {
-            AssertStatusCode(HttpStatusCode.Accepted, response);
+            StatusCodeIs(HttpStatusCode.Accepted, response);
         }
 
-        public static void AssertConflict(HttpResponseMessage response)
+        public static void Conflict(HttpResponseMessage response)
         {
-            AssertStatusCode(HttpStatusCode.Conflict, response);
+            StatusCodeIs(HttpStatusCode.Conflict, response);
         }
 
-        public static void AssertSuccess(HttpResponseMessage response)
+        public static void NotFound(HttpResponseMessage response)
+        {
+            StatusCodeIs(HttpStatusCode.NotFound, response);
+        }
+
+        public static void Success(HttpResponseMessage response)
         {
             Assert.IsTrue(response.IsSuccessStatusCode, response.ReasonPhrase);
         }
-
-        public static Task<TResult> AssertCreated<TResource, TResult>(
+        
+        public static Task<TResult> Created<TResource, TResult>(
             Func<HttpActionDelegate<TResource, TResult>, Task<TResult>> action,
             HttpActionDelegate<TResource, TResult> callback)
         {
             return action(
                 (response, resource) =>
                 {
-                    AssertStatusCode(HttpStatusCode.Created, response);
+                    StatusCodeIs(HttpStatusCode.Created, response);
                     return callback(response, resource);
                 });
         }
