@@ -1,4 +1,5 @@
-﻿using BlackBarLabs.Api.Tests;
+﻿using BlackBarLabs.Api.Resources;
+using BlackBarLabs.Api.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -37,9 +38,10 @@ namespace EastFive.Api.Tests
             StatusCodeIs(HttpStatusCode.NotFound, response);
         }
 
-        public static void Success(HttpResponseMessage response)
+        public static HttpResponseMessage Success(HttpResponseMessage response)
         {
             Assert.IsTrue(response.IsSuccessStatusCode, response.ReasonPhrase);
+            return response;
         }
         
         public static Task<TResult> Created<TResource, TResult>(
@@ -52,6 +54,12 @@ namespace EastFive.Api.Tests
                     StatusCodeIs(HttpStatusCode.Created, response);
                     return callback(response, resource);
                 });
+        }
+
+        public static WebId AreEqual(WebId expected, WebId actual)
+        {
+            expected.AssertEquals(actual);
+            return actual;
         }
     }
 }
