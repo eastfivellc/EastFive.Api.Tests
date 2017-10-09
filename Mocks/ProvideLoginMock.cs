@@ -140,11 +140,11 @@ namespace EastFive.Api.Tests
         }
 
         public async Task<TResult> GetLoginAsync<TResult>(Guid loginId, 
-            Func<string, bool, bool, TResult> onSuccess, 
+            Func<string, string, bool, bool, TResult> onSuccess, 
             Func<TResult> onNotFound,
             Func<string, TResult> onServiceNotAvailable)
         {
-            return await onSuccess("mock", true, true).ToTask();
+            return await onSuccess("displayNameMock", "mock", true, true).ToTask();
         }
 
         public Task<TResult> GetAllLoginAsync<TResult>(Func<Tuple<Guid, string, bool, bool>[], TResult> onSuccess, Func<string, TResult> onFailure)
