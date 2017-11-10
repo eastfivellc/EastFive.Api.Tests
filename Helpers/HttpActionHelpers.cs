@@ -46,7 +46,7 @@ namespace BlackBarLabs.Api.Tests
                                 Assert.Fail($"One of multipart responses returned [{resource.StatusCode}] reason being: {resource.ReasonPhrase}");
                             if (null == resource.Content)
                                 Assert.Fail($"Response was empty: {response}");
-                            return Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(resource.Content as string).ToEnumerable();
+                            return Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(resource.Content as string).AsEnumerable();
                         }
                         catch (JsonSerializationException)
                         {
@@ -65,7 +65,7 @@ namespace BlackBarLabs.Api.Tests
             }
 
             var singleContent = response.GetContent<TModel>();
-            return singleContent.ToEnumerable();
+            return singleContent.AsEnumerable();
         }
 
         public static async Task<IEnumerable<TModel>> GetContentMultipartAsync<TModel>(this Task<HttpResponseMessage> responseRetrieving)
