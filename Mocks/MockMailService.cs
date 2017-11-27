@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using BlackBarLabs.Web;
 using EastFive.Api.Services;
 using BlackBarLabs.Extensions;
+using EastFive.Web.Services;
 
 namespace BlackBarLabs.Api.Tests
 {
-    public class MockMailService : EastFive.Api.Services.ISendMessageService
+    public class MockMailService : ISendMessageService
     {
         public const string OrderTemplate1Name = "Order Template1";
         public const string OrderTemplate2Name = "Order Template2";

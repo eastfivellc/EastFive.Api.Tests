@@ -7,35 +7,55 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using EastFive.Security.LoginProvider;
 using System.Web.Http.Routing;
 using BlackBarLabs.Api.Extensions;
 using BlackBarLabs.Linq;
 using EastFive.Api.Services;
+using EastFive.Security.SessionServer;
+using BlackBarLabs.Api.Resources;
 
 namespace EastFive.Api.Tests
 {
-    public class ProvideLoginMock : IIdentityService
+    public class ProvideLoginMock : EastFive.Security.SessionServer.IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
+        IProvideLogin, IConfigureIdentityServer
     {
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
-        private Dictionary<string, Guid> lookup = new Dictionary<string, Guid>();
-        private Dictionary<string, Guid> tokens = new Dictionary<string, Guid>();
+        private static Dictionary<string, string> tokens = new Dictionary<string, string>();
+        
+        public const string extraParamToken = "token";
+        public const string extraParamState = "state";
 
-        public Task<TResult> CreateLoginAsync<TResult>(string displayName,
-            string userId, bool isEmail, string secret, bool forceChange,
-            Func<Guid, TResult> onSuccess,
-            Func<Guid, TResult> usernameAlreadyInUse,
-            Func<TResult> onPasswordInsufficent,
-            Func<string, TResult> onFail)
+        public static Task<TResult> InitializeAsync<TResult>(
+            Func<IProvideAuthorization, TResult> onProvideAuthorization,
+            Func<TResult> onProvideNothing,
+            Func<string, TResult> onFailure)
         {
-            var loginId = Guid.NewGuid();
-            if (credentials.ContainsKey(userId) ||
-                tokens.Any(kvp => kvp.Value == loginId))
-                return onFail("Already exists").ToTask();
-            credentials.Add(userId, secret);
-            lookup.Add(userId, loginId);
+            return onProvideAuthorization(new ProvideLoginMock()).ToTask();
+        }
 
-            return onSuccess(loginId).ToTask();
+        public CredentialValidationMethodTypes Method => CredentialValidationMethodTypes.Implicit;
+
+        public Task<TResult> RedeemTokenAsync<TResult>(
+            IDictionary<string, string> tokensFromResponse,
+            Func<string, Guid?, Guid?, IDictionary<string, string>, TResult> onSuccess,
+            Func<string, TResult> onInvalidCredentials,
+            Func<string, TResult> onCouldNotConnect,
+            Func<string, TResult> onUnspecifiedConfiguration,
+            Func<string, TResult> onFailure)
+        {
+            var idToken = tokensFromResponse[ProvideLoginMock.extraParamToken];
+            if (!tokens.ContainsKey(idToken))
+                return onInvalidCredentials("Token not found").ToTask();
+            var userId = tokens[idToken];
+
+            var stateId = default(Guid?);
+            if (tokensFromResponse.ContainsKey(ProvideLoginMock.extraParamState))
+            {
+                var stateIdString = tokensFromResponse[ProvideLoginMock.extraParamState];
+                stateId = Guid.Parse(stateIdString);
+            }
+
+            return onSuccess(userId, stateId, default(Guid?), tokensFromResponse).ToTask();
         }
 
         public Uri GetLoginUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
@@ -78,21 +98,12 @@ namespace EastFive.Api.Tests
             var base64 = Convert.ToBase64String(stateBytes);
             return base64;
         }
-
-        public string GetToken(string userId, string token)
+        
+        public static string GetToken(string userId)
         {
-            var loginId = lookup[userId];
-            var otherToken = Guid.NewGuid().ToString();
-            tokens.Add(otherToken, loginId);
-            return otherToken;
-        }
-
-        public string CreateUser(string userId, Guid loginId)
-        {
-            lookup.Add(userId, loginId);
-            var otherToken = Guid.NewGuid().ToString();
-            tokens.Add(otherToken, loginId);
-            return otherToken;
+            var token = Guid.NewGuid().ToString();
+            tokens.Add(token, userId);
+            return token;
         }
 
         public TResult ParseState<TResult>(string state,
@@ -111,63 +122,24 @@ namespace EastFive.Api.Tests
             var data = bytes.Skip(urlLength + 3).ToArray();
             return onSuccess(url, mode, data);
         }
-
-        public Task<TResult> CreateOrUpdateClaim<TResult>(Guid accountId, string claimType, string claimValue, Func<TResult> onSuccess, Func<string, TResult> onFailure)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<TResult> ValidateToken<TResult>(string idToken,
-            Func<ClaimsPrincipal, TResult> onSuccess,
-            Func<string, TResult> onFailed)
-        {
-            if (!tokens.ContainsKey(idToken))
-                return onFailed("Token not found").ToTask();
-            var claimType = EastFive.Web.Configuration.Settings.Get(
-                        EastFive.Security.SessionServer.Configuration.AppSettings.LoginIdClaimType);
-            var claimValue = tokens[idToken].ToString();
-            var claim = new Claim(claimType, claimValue);
-            var identity = new ClaimsIdentity(
-                new[] { claim });
-            var claims = new ClaimsPrincipal(identity);
-            return onSuccess(claims).ToTask();
-        }
-
-        public Task DeleteLoginAsync(Guid loginId)
+        
+        public Task DeleteAuthorizationAsync(Guid loginId)
         {
             //throw new NotImplementedException();
             return 1.ToTask();
-        }
-
-        public async Task<TResult> GetLoginAsync<TResult>(Guid loginId, 
-            Func<string, string, bool, bool, bool, TResult> onSuccess, 
-            Func<TResult> onNotFound,
-            Func<string, TResult> onServiceNotAvailable)
-        {
-            return await onSuccess("displayNameMock", "mock", true, true, true).ToTask();
-        }
-
-        public Task<TResult> GetAllLoginAsync<TResult>(Func<Tuple<Guid, string, bool, bool, bool>[], TResult> onSuccess, Func<string, TResult> onFailure)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<TResult> UpdateLoginPasswordAsync<TResult>(Guid loginId, string password, bool forceChange, Func<TResult> onSuccess, Func<string, TResult> onServiceNotAvailable, Func<string, TResult> onFailure)
-        {
-            return onSuccess().ToTask();
-        }
-
-        public Task<TResult> CreateOrUpdateClaim<TResult>(string claimType, string claimValue, 
-            Func<TResult> onSuccess, 
-            Func<string, TResult> onFailure)
-        {
-            return onSuccess().ToTask();
         }
 
         public TResult ParseState<TResult>(string state,
             Func<byte, byte[], IDictionary<string, string>, TResult> onSuccess, Func<string, TResult> invalidState)
         {
             return onSuccess(0, new byte[] { }, new Dictionary<string, string>());
+        }
+
+        public Uri GetLoginUrl(Guid state, Uri redirectUri)
+        {
+            return new Uri("http://provideloginmock.example.com")
+                .AddQuery(ProvideLoginMock.extraParamState, state.ToString())
+                .AddQuery("redirect", redirectUri.AbsoluteUri);
         }
     }
 

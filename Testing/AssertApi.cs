@@ -28,6 +28,11 @@ namespace EastFive.Api.Tests
             StatusCodeIs(HttpStatusCode.Accepted, response);
         }
 
+        public static void Unauthorized(HttpResponseMessage response)
+        {
+            StatusCodeIs(HttpStatusCode.Unauthorized, response);
+        }
+        
         public static void Conflict(HttpResponseMessage response)
         {
             StatusCodeIs(HttpStatusCode.Conflict, response);
@@ -43,7 +48,13 @@ namespace EastFive.Api.Tests
             Assert.IsTrue(response.IsSuccessStatusCode, response.ReasonPhrase);
             return response;
         }
-        
+
+        public static HttpResponseMessage Redirect(HttpResponseMessage response)
+        {
+            StatusCodeIs(HttpStatusCode.Redirect, response);
+            return response;
+        }
+
         public static Task<TResult> Created<TResource, TResult>(
             Func<HttpActionDelegate<TResource, TResult>, Task<TResult>> action,
             HttpActionDelegate<TResource, TResult> callback)

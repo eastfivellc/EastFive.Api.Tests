@@ -10,18 +10,34 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using BlackBarLabs.Web;
-using EastFive.Security.LoginProvider;
 using BlackBarLabs.Extensions;
 using BlackBarLabs.Api.Tests.Mocks;
 using EastFive.Api.Services;
 using System.Configuration;
 using BlackBarLabs.Collections.Generic;
 using System.Net.Http.Headers;
+using EastFive.Web.Services;
+using EastFive.Collections.Generic;
 
 namespace BlackBarLabs.Api.Tests
 {
     public class TestSession : ITestSession
     {
+        public static TResult Start<TResult>(Func<TestSession, TResult> callback)
+        {
+            var session = new TestSession();
+            var callbackTask = callback(session);
+            return callbackTask;
+        }
+
+        public static TResult Start<TResult>(Guid actorId, Func<TestSession, TResult> callback)
+        {
+            var session = new TestSession(actorId);
+            var callbackTask = callback(session);
+            return callbackTask;
+        }
+
+        // [Obsolete("Use Start")]
         public static async Task StartAsync(Func<TestSession, Task> callback)
         {
             var session = new TestSession();
@@ -33,14 +49,12 @@ namespace BlackBarLabs.Api.Tests
         {
             Id = Guid.NewGuid();
             Headers = new Dictionary<string, string>();
-            Init();
         }
 
         public TestSession(string authorization)
         {
             Headers = new Dictionary<string, string>();
             Headers.Add("Authorization", authorization);
-            Init();
         }
 
         public TestSession(Guid actorId)
@@ -49,7 +63,6 @@ namespace BlackBarLabs.Api.Tests
             Headers = new Dictionary<string, string>();
             var token = BlackBarLabs.Api.Tests.TestSession.CreateToken(actorId);
             Headers.Add("Authorization", token);
-            Init();
         }
 
         public TestSession(Guid actorId, IDictionary<string, string> claims)
@@ -58,20 +71,16 @@ namespace BlackBarLabs.Api.Tests
             Headers = new Dictionary<string, string>();
             var token = BlackBarLabs.Api.Tests.TestSession.CreateToken(actorId, claims);
             Headers.Add("Authorization", token);
-            Init();
         }
 
-        private void Init()
+        public void LoadToken(string jwtToken)
         {
-            this.UpdateRequestPropertyFetch(
-                BlackBarLabs.Api.ServicePropertyDefinitions.IdentityService,
-                ((IIdentityService)LoginService).ToTask());
-            this.UpdateRequestPropertyFetch<ISendMessageService>(
-                BlackBarLabs.Api.ServicePropertyDefinitions.MailService,
-                MailService);
-            this.UpdateRequestPropertyFetch<ITimeService>(
-                BlackBarLabs.Api.ServicePropertyDefinitions.TimeService,
-                TimeService);
+            if(Headers.ContainsKey("Authorization"))
+            {
+                Headers["Authorization"] = jwtToken;
+                return;
+            }
+            Headers.Add("Authorization", jwtToken);
         }
 
         public Guid Id { get; set; }
@@ -104,21 +113,9 @@ namespace BlackBarLabs.Api.Tests
             }
         }
 
-        private static MockTimeService timeService =
-            default(MockTimeService);
-        public MockTimeService TimeService
-        {
-            get
-            {
-                if (default(MockTimeService) == timeService)
-                    timeService = new MockTimeService();
-                return timeService;
-            }
-        }
-
         #region Methods
 
-        public async Task CreateSessionAsync(string credentialToken)
+        public async Task CreateSessionAsync(Dictionary<string, string> credentialToken)
         {
             var response = this.PostAsync<EastFive.Security.SessionServer.Api.Controllers.SessionController>(
                 new EastFive.Security.SessionServer.Api.Resources.Session
@@ -191,15 +188,23 @@ namespace BlackBarLabs.Api.Tests
         public static string CreateToken(Guid actorId)
         {
             var claims = new Dictionary<string, string>();
-            var actorIdClaimType = ConfigurationManager.AppSettings[EastFive.Api.Configuration.SecurityDefinitions.ActorIdClaimType];
-            claims.AddOrReplace(actorIdClaimType, actorId.ToString());
-
-            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
-                new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
-                (tokenNew) => tokenNew,
-                (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
-                (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; });
-            return token;
+            return EastFive.Web.Configuration.Settings.GetString(
+                EastFive.Api.Configuration.SecurityDefinitions.ActorIdClaimType,
+                (actorIdClaimType) =>
+                {
+                    claims.AddOrReplace(actorIdClaimType, actorId.ToString());
+                    var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
+                        new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
+                        (tokenNew) => tokenNew,
+                        (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
+                        (configName, issue) => { Assert.Fail($"{configName} -- {issue}"); return string.Empty; });
+                    return token;;
+                },
+                (why) =>
+                {
+                    Assert.Fail(why);
+                    throw new Exception();
+                });
         }
 
         public static string CreateToken(Guid actorId, IDictionary<string, string> claims)
@@ -231,6 +236,8 @@ namespace BlackBarLabs.Api.Tests
             return await InvokeControllerAsync(controller, HttpMethod.Get,
                 (request, user) =>
                 {
+                    if (!mutateRequest.IsDefault())
+                        mutateRequest(request);
                     return resource;
                 });
         }
@@ -315,6 +322,7 @@ namespace BlackBarLabs.Api.Tests
             Func<T> fetchPropertyValue = () => (T)requestPropertyObjects[propertyKey];
             requestPropertyFetches.Add(propertyKey, fetchPropertyValue);
         }
+
         public void UpdateRequestPropertyFetch<T>(string propertyKey, T propertyValue)
         {
             T discard;
@@ -330,7 +338,34 @@ namespace BlackBarLabs.Api.Tests
             }
             return default(T);
         }
-        
+
+        public TResult MockMailService<TResult>(MockMailService.SendEmailMessageDelegate callback,
+            Func<TResult> onMocked)
+        {
+            var currentMailFetch = EastFive.Web.Services.ServiceConfiguration.SendMessageService;
+            var mockMailService = new MockMailService();
+            mockMailService.SendEmailMessageCallback = callback;
+            EastFive.Web.Services.ServiceConfiguration.SendMessageService =
+                () => mockMailService;
+            
+            var result = onMocked();
+            EastFive.Web.Services.ServiceConfiguration.SendMessageService = currentMailFetch;
+            return result;
+        }
+
+        private TResult SendgridMailService<TResult>(ITestSession session,
+            Func<TResult> callback)
+        {
+            var currentMailFetch = EastFive.Web.Services.ServiceConfiguration.SendMessageService;
+            var sendgridMailer = new EastFive.SendGrid.SendGridMailer();
+            EastFive.Web.Services.ServiceConfiguration.SendMessageService =
+                () => sendgridMailer;
+
+            var result = callback();
+            EastFive.Web.Services.ServiceConfiguration.SendMessageService = currentMailFetch;
+            return result;
+        }
+
         private HttpRequestMessage GetRequest<TController>(TController controller, HttpMethod method)
             where TController : ApiController
         {
@@ -371,13 +406,7 @@ namespace BlackBarLabs.Api.Tests
                 }).ToArray();
             
             httpRequest.SetConfiguration(config);
-
-            foreach(var requestPropertyKvp in requestPropertyFetches)
-            {
-                httpRequest.Properties.Add(
-                    requestPropertyKvp.Key, requestPropertyKvp.Value);
-            }
-
+            
             controller.Request = httpRequest;
             foreach (var headerKVP in Headers)
             {
@@ -450,6 +479,7 @@ namespace BlackBarLabs.Api.Tests
                     return new object[] { };
                 });
         }
+
         private async Task<HttpResponseMessage> InvokeControllerAsync<TController>(
                 TController controller,
                 HttpMethod method,
