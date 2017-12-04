@@ -1,18 +1,11 @@
 ﻿using BlackBarLabs.Extensions;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
-using System.Collections.ObjectModel;
-using System.Web.Http.Routing;
 using BlackBarLabs.Api.Extensions;
 using BlackBarLabs.Linq;
-using EastFive.Api.Services;
 using EastFive.Security.SessionServer;
-using BlackBarLabs.Api.Resources;
 
 namespace EastFive.Api.Tests
 {
@@ -58,7 +51,7 @@ namespace EastFive.Api.Tests
             return onSuccess(userId, stateId, default(Guid?), tokensFromResponse).ToTask();
         }
 
-        public Uri GetLoginUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
+       public Uri GetLoginUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
         {
             return (new Uri("http://example.com/login"))
                 .AddQuery("redirect", redirect_uri)
@@ -76,13 +69,14 @@ namespace EastFive.Api.Tests
                 .AddQuery("state", GetState(redirect_uri, mode, state));
         }
 
-        public Uri GetLogoutUrl(string redirect_uri, byte mode, byte[] state, Uri responseControllerLocation)
+        public Uri GetLogoutUrl(Guid state, Uri responseControllerLocation)
         {
-            return (new Uri("http://example.com/logout"))
-                .AddQuery("redirect", redirect_uri)
-                .AddQuery("mode", ((int)mode).ToString())
-                .AddQuery("data", Convert.ToBase64String(state))
-                .AddQuery("state", GetState(redirect_uri, mode, state));
+            throw new NotImplementedException();
+            //return (new Uri("http://example.com/logout"))
+            //    .AddQuery("redirect", redirect_uri)
+            //    .AddQuery("mode", ((int)mode).ToString())
+            //    .AddQuery("data", Convert.ToBase64String(state))
+            //    .AddQuery("state", GetState(redirect_uri, mode, state));
         }
 
         private string GetState(string redirect_uri, byte mode, byte[] state)
@@ -106,23 +100,22 @@ namespace EastFive.Api.Tests
             return token;
         }
 
-        public TResult ParseState<TResult>(string state,
-            Func<Uri, byte, byte[], TResult> onSuccess,
-            Func<string, TResult> invalidState)
+        public TResult ParseState<TResult>(string state, Func<Guid, TResult> onSuccess, Func<string, TResult> onInvalidState)
         {
-            var bytes = Convert.FromBase64String(state);
-            var urlLength = BitConverter.ToInt16(bytes, 0);
-            if (bytes.Length < urlLength + 3)
-                return invalidState("Encoded redirect length is invalid");
-            var addr = System.Text.Encoding.ASCII.GetString(bytes, 2, urlLength);
-            Uri url;
-            if (!Uri.TryCreate(addr, UriKind.RelativeOrAbsolute, out url))
-                return invalidState($"Invalid value for redirect url:[{addr}]");
-            var mode = bytes.Skip(urlLength + 2).First();
-            var data = bytes.Skip(urlLength + 3).ToArray();
-            return onSuccess(url, mode, data);
+            throw new NotImplementedException();
+            //var bytes = Convert.FromBase64String(state);
+            //var urlLength = BitConverter.ToInt16(bytes, 0);
+            //if (bytes.Length < urlLength + 3)
+            //    return onInvalidState("Encoded redirect length is invalid");
+            //var addr = System.Text.Encoding.ASCII.GetString(bytes, 2, urlLength);
+            //Uri url;
+            //if (!Uri.TryCreate(addr, UriKind.RelativeOrAbsolute, out url))
+            //    return onInvalidState($"Invalid value for redirect url:[{addr}]");
+            //var mode = bytes.Skip(urlLength + 2).First();
+            //var data = bytes.Skip(urlLength + 3).ToArray();
+            //return onSuccess(url, mode, data);
         }
-        
+
         public Task DeleteAuthorizationAsync(Guid loginId)
         {
             //throw new NotImplementedException();
@@ -142,5 +135,4 @@ namespace EastFive.Api.Tests
                 .AddQuery("redirect", redirectUri.AbsoluteUri);
         }
     }
-
 }
