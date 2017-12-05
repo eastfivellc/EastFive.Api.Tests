@@ -1,18 +1,11 @@
 ﻿using BlackBarLabs.Extensions;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
-using System.Collections.ObjectModel;
-using System.Web.Http.Routing;
 using BlackBarLabs.Api.Extensions;
 using BlackBarLabs.Linq;
-using EastFive.Api.Services;
 using EastFive.Security.SessionServer;
-using BlackBarLabs.Api.Resources;
 
 namespace EastFive.Api.Tests
 {
@@ -57,6 +50,7 @@ namespace EastFive.Api.Tests
 
             return onSuccess(userId, stateId, default(Guid?), tokensFromResponse).ToTask();
         }
+
         
         public static string GetToken(string userId)
         {
@@ -87,5 +81,4 @@ namespace EastFive.Api.Tests
                 .AddQuery("redirect", responseControllerLocation.AbsoluteUri);
         }
     }
-
 }
