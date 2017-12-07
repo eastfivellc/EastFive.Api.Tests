@@ -121,16 +121,13 @@ namespace BlackBarLabs.Api.Tests
                 new EastFive.Security.SessionServer.Api.Resources.Session
                 {
                     Id = this.Id,
-                    CredentialToken = new EastFive.Security.SessionServer.Api.Resources.CredentialToken
-                    {
-                        Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.Password,
-                        Token = credentialToken,
-                    },
+                    Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.Password,
+                    ResponseToken = credentialToken,
                 });
             var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(
                 System.Net.HttpStatusCode.Created);
             Assert.AreEqual(this.Id, sessionFromAuth.AuthorizationId);
-            this.Headers.Add(sessionFromAuth.SessionHeader.Name, sessionFromAuth.SessionHeader.Value);
+            this.Headers.Add("Authorization", sessionFromAuth.JwtToken);
         }
 
         public async Task<HttpResponseMessage> PostAsync<TController>(object resource,
