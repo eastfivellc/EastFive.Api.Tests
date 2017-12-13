@@ -10,10 +10,11 @@ using EastFive.Security.SessionServer;
 namespace EastFive.Api.Tests
 {
     public class ProvideLoginMock : EastFive.Security.SessionServer.IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
-        IProvideLogin, IConfigureIdentityServer
+        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement
     {
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
         private static Dictionary<string, string> tokens = new Dictionary<string, string>();
+        public static CredentialValidationMethodTypes method;
         
         public const string extraParamToken = "token";
         public const string extraParamState = "state";
@@ -26,7 +27,7 @@ namespace EastFive.Api.Tests
             return onProvideAuthorization(new ProvideLoginMock()).ToTask();
         }
 
-        public CredentialValidationMethodTypes Method => CredentialValidationMethodTypes.Implicit;
+        public CredentialValidationMethodTypes Method => method;
 
         public Task<TResult> RedeemTokenAsync<TResult>(
             IDictionary<string, string> tokensFromResponse,
@@ -79,6 +80,42 @@ namespace EastFive.Api.Tests
             return new Uri("http://provideloginmock.example.com/signup")
                 .AddQuery(ProvideLoginMock.extraParamState, state.ToString())
                 .AddQuery("redirect", responseControllerLocation.AbsoluteUri);
+        }
+
+        public Task<TResult> CreateAuthorizationAsync<TResult>(string displayName, string userId, bool isEmail, string secret, bool forceChange, 
+            Func<Guid, TResult> onSuccess,
+            Func<Guid, TResult> usernameAlreadyInUse,
+            Func<TResult> onPasswordInsufficent, 
+            Func<string, TResult> onServiceNotAvailable,
+            Func<TResult> onServiceNotSupported,
+            Func<string, TResult> onFailure)
+        {
+            return onSuccess(Guid.NewGuid()).ToTask();
+        }
+
+        public Task<TResult> GetAuthorizationAsync<TResult>(Guid loginId, Func<LoginInfo, TResult> onSuccess, Func<TResult> onNotFound, Func<string, TResult> onServiceNotAvailable, Func<TResult> onServiceNotSupported, Func<string, TResult> onFailure)
+        {
+            return onSuccess(
+                new LoginInfo
+                {
+                    loginId = loginId,
+                }).ToTask();
+        }
+
+        public Task<TResult> GetAllAuthorizationsAsync<TResult>(
+            Func<LoginInfo[], TResult> onFound, Func<string, TResult> onServiceNotAvailable, Func<TResult> onServiceNotSupported, Func<string, TResult> onFailure)
+        {
+            return onFound(new LoginInfo[] { }).ToTask();
+        }
+
+        public Task<TResult> UpdateAuthorizationAsync<TResult>(Guid loginId, string password, bool forceChange, Func<TResult> onSuccess, Func<string, TResult> onServiceNotAvailable, Func<TResult> onServiceNotSupported, Func<string, TResult> onFailure)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TResult> DeleteAuthorizationAsync<TResult>(Guid loginId, Func<TResult> onSuccess, Func<string, TResult> onServiceNotAvailable, Func<TResult> onServiceNotSupported, Func<string, TResult> onFailure)
+        {
+            throw new NotImplementedException();
         }
     }
 }
