@@ -127,7 +127,7 @@ namespace BlackBarLabs.Api.Tests
             var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(
                 System.Net.HttpStatusCode.Created);
             Assert.AreEqual(this.Id, sessionFromAuth.AuthorizationId);
-            this.Headers.Add("Authorization", sessionFromAuth.JwtToken);
+            this.Headers.Add("Authorization", sessionFromAuth.Token);
         }
 
         public async Task<HttpResponseMessage> PostAsync<TController>(object resource,
@@ -186,7 +186,7 @@ namespace BlackBarLabs.Api.Tests
         {
             var claims = new Dictionary<string, string>();
             return EastFive.Web.Configuration.Settings.GetString(
-                EastFive.Api.Configuration.SecurityDefinitions.ActorIdClaimType,
+                EastFive.Api.AppSettings.ActorIdClaimType,
                 (actorIdClaimType) =>
                 {
                     claims.AddOrReplace(actorIdClaimType, actorId.ToString());
@@ -206,7 +206,7 @@ namespace BlackBarLabs.Api.Tests
 
         public static string CreateToken(Guid actorId, IDictionary<string, string> claims)
         {
-            var actorIdClaimType = ConfigurationManager.AppSettings[EastFive.Api.Configuration.SecurityDefinitions.ActorIdClaimType];
+            var actorIdClaimType = ConfigurationManager.AppSettings[EastFive.Api.AppSettings.ActorIdClaimType];
             claims.AddOrReplace(actorIdClaimType, actorId.ToString());
             var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
                 new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,

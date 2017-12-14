@@ -28,7 +28,8 @@ namespace EastFive.Api.Tests
         }
 
         public CredentialValidationMethodTypes Method => method;
-
+        public Type CallbackController => typeof(ProvideLoginMock);
+        
         public Task<TResult> RedeemTokenAsync<TResult>(
             IDictionary<string, string> tokensFromResponse,
             Func<string, Guid?, Guid?, IDictionary<string, string>, TResult> onSuccess,
