@@ -1,5 +1,6 @@
 ﻿using BlackBarLabs.Api.Tests.Examples;
 using BlackBarLabs.Extensions;
+using EastFive;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
