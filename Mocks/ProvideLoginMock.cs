@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 using BlackBarLabs.Api.Extensions;
 using BlackBarLabs.Linq;
 using EastFive.Security.SessionServer;
+using System.Net.Http;
 
 namespace EastFive.Api.Tests
 {
-    public class ProvideLoginMock : EastFive.Security.SessionServer.IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
-        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement
+    public class ProvideLoginMock : IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
+        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideAccess
     {
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
         private static Dictionary<string, string> tokens = new Dictionary<string, string>();
@@ -117,6 +118,11 @@ namespace EastFive.Api.Tests
         public Task<TResult> DeleteAuthorizationAsync<TResult>(Guid loginId, Func<TResult> onSuccess, Func<string, TResult> onServiceNotAvailable, Func<TResult> onServiceNotSupported, Func<string, TResult> onFailure)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<TResult> CreateSessionAsync<TResult>(IDictionary<string, string> parameters, Func<HttpClient, IDictionary<string, string>, TResult> onCreatedSession, Func<string, TResult> onFailedToCreateSession)
+        {
+            return onCreatedSession(new HttpClient(), parameters).ToTask();
         }
     }
 }
