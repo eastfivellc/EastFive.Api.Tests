@@ -34,6 +34,7 @@ namespace EastFive.Api.Tests
         public Task<TResult> RedeemTokenAsync<TResult>(
             IDictionary<string, string> tokensFromResponse,
             Func<string, Guid?, Guid?, IDictionary<string, string>, TResult> onSuccess,
+            Func<Guid?, IDictionary<string, string>, TResult> onNotAuthenticated,
             Func<string, TResult> onInvalidCredentials,
             Func<string, TResult> onCouldNotConnect,
             Func<string, TResult> onUnspecifiedConfiguration,
@@ -124,5 +125,6 @@ namespace EastFive.Api.Tests
         {
             return onCreatedSession(new HttpClient(), parameters).ToTask();
         }
+        
     }
 }
