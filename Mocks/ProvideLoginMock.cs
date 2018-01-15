@@ -11,7 +11,7 @@ using System.Net.Http;
 namespace EastFive.Api.Tests
 {
     public class ProvideLoginMock : IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
-        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideAccess
+        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideToken
     {
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
         private static Dictionary<string, string> tokens = new Dictionary<string, string>();
@@ -62,7 +62,15 @@ namespace EastFive.Api.Tests
             tokens.Add(token, userId);
             return token;
         }
-        
+
+        public IDictionary<string, string> CreateTokens(Guid actorId)
+        {
+            var token = GetToken(actorId.ToString("N"));
+            return new Dictionary<string, string>()
+            {
+                {  ProvideLoginMock.extraParamToken, token }
+            };
+        }
 
         public Uri GetLoginUrl(Guid state, Uri responseControllerLocation)
         {
@@ -125,6 +133,6 @@ namespace EastFive.Api.Tests
         {
             return onCreatedSession(new HttpClient(), parameters).ToTask();
         }
-        
+
     }
 }

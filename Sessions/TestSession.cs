@@ -233,6 +233,7 @@ namespace BlackBarLabs.Api.Tests
             return await InvokeControllerAsync(controller, HttpMethod.Get,
                 (request, user) =>
                 {
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     if (!mutateRequest.IsDefault())
                         mutateRequest(request);
                     return resource;
