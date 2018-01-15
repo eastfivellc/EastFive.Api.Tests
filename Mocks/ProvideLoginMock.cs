@@ -29,20 +29,21 @@ namespace EastFive.Api.Tests
         }
 
         public CredentialValidationMethodTypes Method => method;
+
         public Type CallbackController => typeof(ProvideLoginMock);
         
         public Task<TResult> RedeemTokenAsync<TResult>(
             IDictionary<string, string> tokensFromResponse,
             Func<string, Guid?, Guid?, IDictionary<string, string>, TResult> onSuccess,
             Func<Guid?, IDictionary<string, string>, TResult> onNotAuthenticated,
-            Func<string, TResult> onInvalidCredentials,
+            Func<string, TResult> onInvalidToken,
             Func<string, TResult> onCouldNotConnect,
             Func<string, TResult> onUnspecifiedConfiguration,
             Func<string, TResult> onFailure)
         {
             var idToken = tokensFromResponse[ProvideLoginMock.extraParamToken];
             if (!tokens.ContainsKey(idToken))
-                return onInvalidCredentials("Token not found").ToTask();
+                return onInvalidToken("Token not found").ToTask();
             var userId = tokens[idToken];
 
             var stateId = default(Guid?);
