@@ -18,6 +18,7 @@ using BlackBarLabs.Collections.Generic;
 using System.Net.Http.Headers;
 using EastFive.Web.Services;
 using EastFive.Collections.Generic;
+using EastFive.Extensions;
 
 namespace BlackBarLabs.Api.Tests
 {
