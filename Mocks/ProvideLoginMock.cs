@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BlackBarLabs.Api.Extensions;
 using BlackBarLabs.Linq;
 using EastFive.Security.SessionServer;
 using System.Net.Http;
