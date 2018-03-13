@@ -104,7 +104,11 @@
       <Project>{c6e444da-3991-43e3-a6c8-56db53670970}</Project>
       <Name>BlackBarLabs.SendGrid</Name>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)\BlackBarLabs.SessionServer\EastFive.Security.SessionServer.csproj">
+    <ProjectReference Include="..\EastFive.SessionServer\EastFive.Security.SessionServer.csproj">
+      <Project>{e2f3fcfb-89c8-47b3-b3d2-ae35e52a84fa}</Project>
+      <Name>EastFive.Security.SessionServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\Josh\Repos\OrderOwl\\BlackBarLabs.SessionServer\EastFive.Security.SessionServer.csproj">
       <Project>{e2f3fcfb-89c8-47b3-b3d2-ae35e52a84fa}</Project>
       <Name>EastFive.Security.SessionServer</Name>
     </ProjectReference>
