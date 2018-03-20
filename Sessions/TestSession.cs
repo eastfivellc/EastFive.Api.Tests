@@ -19,6 +19,7 @@ using System.Net.Http.Headers;
 using EastFive.Web.Services;
 using EastFive.Collections.Generic;
 using EastFive.Extensions;
+using EastFive.Linq;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -139,6 +140,7 @@ namespace BlackBarLabs.Api.Tests
             return await InvokeControllerAsync(controller, HttpMethod.Post,
                 (request, user) =>
                 {
+                    request.Content = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(resource));
                     return resource;
                 });
         }
@@ -436,33 +438,35 @@ namespace BlackBarLabs.Api.Tests
         {
             return await InvokeControllerAsync<TController>(
                 controller, method,
-                (httpRequest, methodInfo) =>
+                (HttpRequestMessage httpRequest, System.Reflection.MethodInfo methodInfo) =>
                 {
                     var resource = callback(httpRequest, controller.User as MockPrincipal);
                     return methodInfo.GetParameters()
-                        .Select(
-                            param =>
+                        .ReduceItems<bool, System.Reflection.ParameterInfo, object>(
+                            false,
+                            (aggr1, param, next, skip) =>
                             {
                                 if (param.ParameterType.IsAssignableFrom(resource.GetType()))
-                                    return resource;
+                                {
+                                    return next(resource, true);
+                                }
 
                                 if (param.ParameterType.IsAssignableFrom(typeof(Resources.WebIdQuery)))
                                 {
                                     var idProperty = resource.GetType().GetProperty("Id");
                                     var id = idProperty.GetValue(resource);
-                                    return id;
+                                    return next(id, aggr1);
                                 }
 
                                 if (param.ParameterType.IsAssignableFrom(typeof(Guid)))
                                 {
                                     var idProperty = resource.GetType().GetProperty("Id");
                                     var idQuery = (Resources.WebId)idProperty.GetValue(resource);
-                                    return idQuery.UUID;
+                                    return next(idQuery.UUID, aggr1);
                                 }
 
-                                return new object();
-                            })
-                        .ToArray();
+                                return next(new object(), aggr1);
+                            }).ToArray();
                 });
         }
 
