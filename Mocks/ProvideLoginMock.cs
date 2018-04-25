@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BlackBarLabs.Linq;
 using EastFive.Security.SessionServer;
 using System.Net.Http;
+using System.Security.Claims;
 
 namespace EastFive.Api.Tests
 {
@@ -139,5 +140,9 @@ namespace EastFive.Api.Tests
             return onCreatedSession(new HttpClient(), parameters).ToTask();
         }
 
+        public Task<TResult> UserParametersAsync<TResult>(Guid actorId, System.Security.Claims.Claim[] claims, IDictionary<string, string> extraParams, Func<IDictionary<string, string>, IDictionary<string, Type>, IDictionary<string, string>, TResult> onSuccess)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
