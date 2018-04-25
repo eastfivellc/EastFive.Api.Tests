@@ -139,10 +139,13 @@ namespace EastFive.Api.Tests
         {
             return onCreatedSession(new HttpClient(), parameters).ToTask();
         }
-
+        
         public Task<TResult> UserParametersAsync<TResult>(Guid actorId, System.Security.Claims.Claim[] claims, IDictionary<string, string> extraParams, Func<IDictionary<string, string>, IDictionary<string, Type>, IDictionary<string, string>, TResult> onSuccess)
         {
-            throw new NotImplementedException();
+            return onSuccess(
+                new Dictionary<string, string>() { { "PushPMPFileToEHR", "Push PMP file to EHR" } },
+                new Dictionary<string, Type>() { { "PushPMPFileToEHR", typeof(bool) } },
+                new Dictionary<string, string>() { { "PushPMPFileToEHR", "When true, the system will push PMP files into the provider's clinical documents in their EHR system." } }).ToTask();
         }
     }
 }
