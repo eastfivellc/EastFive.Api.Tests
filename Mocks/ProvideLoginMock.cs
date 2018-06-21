@@ -20,6 +20,7 @@ namespace EastFive.Api.Tests
         public const string extraParamToken = "token";
         public const string extraParamState = "state";
 
+        [Security.SessionServer.Attributes.IntegrationName("Mock")]
         public static Task<TResult> InitializeAsync<TResult>(
             Func<IProvideAuthorization, TResult> onProvideAuthorization,
             Func<TResult> onProvideNothing,
