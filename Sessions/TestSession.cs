@@ -123,7 +123,7 @@ namespace BlackBarLabs.Api.Tests
                 new EastFive.Security.SessionServer.Api.Resources.Session
                 {
                     Id = this.Id,
-                    Method = "Password", //EastFive.Security.SessionServer.CredentialValidationMethodTypes.Password,
+                    Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.Password.ToString(),
                     ResponseToken = credentialToken,
                 });
             var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(
