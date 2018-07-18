@@ -74,21 +74,21 @@ namespace EastFive.Api.Tests
             };
         }
 
-        public Uri GetLoginUrl(Guid state, Uri responseControllerLocation)
+        public Uri GetLoginUrl(Guid state, Uri responseControllerLocation, Func<Type, Uri> controllerToLocation)
         {
             return new Uri("http://provideloginmock.example.com/login")
                 .AddQuery(ProvideLoginMock.extraParamState, state.ToString())
                 .AddQuery("redirect", responseControllerLocation.AbsoluteUri);
         }
 
-        public Uri GetLogoutUrl(Guid state, Uri responseControllerLocation)
+        public Uri GetLogoutUrl(Guid state, Uri responseControllerLocation, Func<Type, Uri> controllerToLocation)
         {
             return new Uri("http://provideloginmock.example.com/logout")
                 .AddQuery(ProvideLoginMock.extraParamState, state.ToString())
                 .AddQuery("redirect", responseControllerLocation.AbsoluteUri);
         }
 
-        public Uri GetSignupUrl(Guid state, Uri responseControllerLocation)
+        public Uri GetSignupUrl(Guid state, Uri responseControllerLocation, Func<Type, Uri> controllerToLocation)
         {
             return new Uri("http://provideloginmock.example.com/signup")
                 .AddQuery(ProvideLoginMock.extraParamState, state.ToString())
