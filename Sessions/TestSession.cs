@@ -20,6 +20,7 @@ using EastFive.Web.Services;
 using EastFive.Collections.Generic;
 using EastFive.Extensions;
 using EastFive.Linq;
+using System.Web.Http.Routing;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -110,7 +111,7 @@ namespace BlackBarLabs.Api.Tests
             get
             {
                 if (default(MockMailService) == mailService)
-                    mailService = new MockMailService();
+                    mailService = new MockMailService(null);
                 return mailService;
             }
         }
@@ -339,13 +340,12 @@ namespace BlackBarLabs.Api.Tests
             }
             return default(T);
         }
-
+        
         public TResult MockMailService<TResult>(MockMailService.SendEmailMessageDelegate callback,
             Func<TResult> onMocked)
         {
             var currentMailFetch = EastFive.Web.Services.ServiceConfiguration.SendMessageService;
-            var mockMailService = new MockMailService();
-            mockMailService.SendEmailMessageCallback = callback;
+            var mockMailService = new MockMailService(callback);
             EastFive.Web.Services.ServiceConfiguration.SendMessageService =
                 () => mockMailService;
             
@@ -537,26 +537,6 @@ namespace BlackBarLabs.Api.Tests
                     callback(request, methodInfo);
                     return (new object[] { });
                 });
-        }
-
-        public Task<HttpResponseMessage> PostAsync<T1>(Func<T1, Task<HttpResponseMessage>> action, object resource, Action<HttpRequestMessage> mutateRequest = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpResponseMessage> PostAsync<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Task<HttpResponseMessage>> action, object resource, Action<HttpRequestMessage> mutateRequest = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpResponseMessage> PostAsync<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, Task<HttpResponseMessage>> action, object resource, T1 param1 = default(T1), T1 param2 = default(T1), T1 param3 = default(T1), Action<HttpRequestMessage> mutateRequest = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpResponseMessage> PostAsync<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, Task<HttpResponseMessage>> action, object resource, Action<HttpRequestMessage> mutateRequest = null)
-        {
-            throw new NotImplementedException();
         }
     }
 }

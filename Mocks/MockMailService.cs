@@ -13,6 +13,11 @@ namespace BlackBarLabs.Api.Tests
         public const string OrderTemplate1Name = "Order Template1";
         public const string OrderTemplate2Name = "Order Template2";
 
+        public MockMailService(SendEmailMessageDelegate sendEmailMessageCallback)
+        {
+            this.SendEmailMessageCallback = sendEmailMessageCallback;
+        }
+
         public delegate Task SendEmailMessageDelegate(string templateName, string toAddress, string toName, string fromAddress, string fromName,
             string subject, IDictionary<string, string> substitutionsSingle);
 
