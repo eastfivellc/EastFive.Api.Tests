@@ -7,6 +7,7 @@ using BlackBarLabs.Linq;
 using EastFive.Security.SessionServer;
 using System.Net.Http;
 using System.Security.Claims;
+using EastFive.Api.Azure.Credentials;
 
 namespace EastFive.Api.Tests
 {
@@ -20,7 +21,7 @@ namespace EastFive.Api.Tests
         public const string extraParamToken = "token";
         public const string extraParamState = "state";
 
-        [Security.SessionServer.Attributes.IntegrationName("Mock")]
+        [Azure.Credentials.Attributes.IntegrationName("Mock")]
         public static Task<TResult> InitializeAsync<TResult>(
             Func<IProvideAuthorization, TResult> onProvideAuthorization,
             Func<TResult> onProvideNothing,

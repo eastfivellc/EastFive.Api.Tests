@@ -21,6 +21,9 @@ using EastFive.Collections.Generic;
 using EastFive.Extensions;
 using EastFive.Linq;
 using System.Web.Http.Routing;
+using EastFive.Api.Azure.Credentials.Controllers;
+using EastFive.Api.Azure.Credentials;
+using EastFive.Api.Azure.Credentials.Resources;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -120,14 +123,14 @@ namespace BlackBarLabs.Api.Tests
 
         public async Task CreateSessionAsync(Dictionary<string, string> credentialToken)
         {
-            var response = this.PostAsync<EastFive.Security.SessionServer.Api.Controllers.SessionController>(
-                new EastFive.Security.SessionServer.Api.Resources.Session
+            var response = this.PostAsync<SessionController>(
+                new EastFive.Api.Azure.Credentials.Resources.Session
                 {
                     Id = this.Id,
-                    Method = EastFive.Security.SessionServer.CredentialValidationMethodTypes.Password.ToString(),
+                    Method = CredentialValidationMethodTypes.Password.ToString(),
                     ResponseToken = credentialToken,
                 });
-            var sessionFromAuth = await response.GetContentAsync<EastFive.Security.SessionServer.Api.Resources.Session>(
+            var sessionFromAuth = await response.GetContentAsync<Session>(
                 System.Net.HttpStatusCode.Created);
             Assert.AreEqual(this.Id, sessionFromAuth.AuthorizationId);
             this.Headers.Add("Authorization", sessionFromAuth.Token);
