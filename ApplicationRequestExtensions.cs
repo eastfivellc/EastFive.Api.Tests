@@ -199,6 +199,19 @@ namespace EastFive.Api.Tests
                 });
         }
 
+        public static Task<TResult> PostAsync<TApplication, TResult>(this TApplication application,
+                Func<RequestContext,
+                    Controllers.CreatedResponse,
+                    Task<HttpResponseMessage>> operation,
+                Func<TResult> onCreated)
+            where TApplication : ITestApplication
+        {
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Post,
+                (request, context) => operation(
+                        context,
+                        onCreated.CreatedResponse(request)));
+        }
+
         public static Task<TResult> PostDependentAsync<TApplication, TResult>(this TApplication application,
                 Func<RequestContext,
                     Controllers.CreatedResponse,
