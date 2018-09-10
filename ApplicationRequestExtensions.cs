@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +20,12 @@ namespace EastFive.Api.Tests
             public HttpRequestMessage request;
             public UrlHelper urlHelper;
             public Controllers.Security security;
+            public Controllers.AlreadyExistsResponse onAlreadyExists;
+            public Controllers.ReferencedDocumentNotFoundResponse onReferencedDocumentNotFound;
+            public Controllers.AlreadyExistsReferencedResponse onRelationshipAlreadyExists;
+            public Controllers.UnauthorizedResponse onUnauthorized;
+            public Controllers.GeneralConflictResponse onGeneralConflict;
+
         }
 
         private static HttpRequestMessage GetRequest<TApplication>(this TApplication application, HttpMethod method)
@@ -97,6 +105,23 @@ namespace EastFive.Api.Tests
             };
         }
 
+        private static Controllers.CreatedResponse CreatedResponse<TResource, TResult>(this Func<TResource, TResult> onCreated, HttpRequestMessage request,
+            Expression<Func<RequestContext,
+                    Controllers.CreatedResponse,
+                    Task<HttpResponseMessage>>> operation)
+        {
+            return () =>
+            {
+                var resource = Activator.CreateInstance<TResource>();
+                var body = operation.Body;
+
+                var attached = new AttachedHttpResponseMessage<TResult>(
+                    onCreated(default(TResource)),
+                    request.CreateResponse(System.Net.HttpStatusCode.Created));
+                return attached;
+            };
+        }
+
         private static Controllers.AlreadyExistsResponse AlreadyExistsResponse<TResult>(this Func<TResult> onAlreadyExists, HttpRequestMessage request)
         {
             return () => new AttachedHttpResponseMessage<TResult>(
@@ -104,7 +129,7 @@ namespace EastFive.Api.Tests
                     request.CreateResponse(System.Net.HttpStatusCode.Conflict));
         }
 
-        private static Controllers.ReferencedDocumentDoesNotExistsResponse ReferencedDocumentDoesNotExistsResponse<TResult>(this Func<TResult> onReferenedDoesNotExists, HttpRequestMessage request)
+        private static Controllers.ReferencedDocumentDoesNotExistsResponse<TRef> ReferencedDocumentDoesNotExistsResponse<TRef, TResult>(this Func<TResult> onReferenedDoesNotExists, HttpRequestMessage request)
         {
             return () => new AttachedHttpResponseMessage<TResult>(
                     onReferenedDoesNotExists(),
@@ -165,9 +190,8 @@ namespace EastFive.Api.Tests
 
         #endregion
 
-        private static Task<TResult> GetRequestContext<TApplication, TResult>(this TApplication application, HttpMethod method,
+        private static Task<TResult> GetRequestContext<TResult>(this ITestApplication application, HttpMethod method,
             Func<HttpRequestMessage, RequestContext, Task<HttpResponseMessage>> callback)
-            where TApplication : ITestApplication
         {
             var request = application.GetRequest(method);
             return Web.Configuration.Settings.GetString(
@@ -199,6 +223,52 @@ namespace EastFive.Api.Tests
                 });
         }
 
+        private static Task<TResult> GetRequestContext<TResult>(this ITestApplication application, HttpMethod method,
+            Func<Type, TResult> onOtherResponse,
+            Func<HttpRequestMessage, RequestContext, Task<HttpResponseMessage>> callback)
+        {
+            var request = application.GetRequest(method);
+            return Web.Configuration.Settings.GetString(
+                Api.AppSettings.ActorIdClaimType,
+                async (actorIdClaimType) =>
+                {
+                    var requestContext = new RequestContext
+                    {
+                        request = request,
+                        urlHelper = new UrlHelper(request),
+                        security = new Controllers.Security()
+                        {
+                            performingAsActorId = application.ActorId,
+                            claims = new System.Security.Claims.Claim[]
+                            {
+                                new System.Security.Claims.Claim(actorIdClaimType, application.ActorId.ToString()),
+                            }
+                        },
+                        onAlreadyExists = () => new AttachedHttpResponseMessage<TResult>(
+                            onOtherResponse(typeof(Controllers.AlreadyExistsResponse)), default(HttpResponseMessage)),
+                        onRelationshipAlreadyExists = (id) => new AttachedHttpResponseMessage<TResult>(
+                            onOtherResponse(typeof(Controllers.AlreadyExistsReferencedResponse)), default(HttpResponseMessage)),
+                        onReferencedDocumentNotFound = () => new AttachedHttpResponseMessage<TResult>(
+                            onOtherResponse(typeof(Controllers.ReferencedDocumentNotFoundResponse)), default(HttpResponseMessage)),
+                        //onReferencedDocumentDoesNotExists = () => new AttachedHttpResponseMessage<TResult>(
+                        //    onOtherResponse(typeof(Controllers.ReferencedDocumentDoesNotExistsResponse)), default(HttpResponseMessage)),
+                        onUnauthorized = () => new AttachedHttpResponseMessage<TResult>(
+                            onOtherResponse(typeof(Controllers.ReferencedDocumentNotFoundResponse)), default(HttpResponseMessage)),
+                        onGeneralConflict = (why) => new AttachedHttpResponseMessage<TResult>(
+                            onOtherResponse(typeof(Controllers.ReferencedDocumentNotFoundResponse)), default(HttpResponseMessage)),
+                    };
+
+                    var response = await callback(request, requestContext);
+                    var attachedResponse = response as AttachedHttpResponseMessage<TResult>;
+                    return attachedResponse.Result;
+                },
+                (why) =>
+                {
+                    Assert.Fail(why);
+                    throw new Exception(why);
+                });
+        }
+
         public static Task<TResult> PostAsync<TApplication, TResult>(this TApplication application,
                 Func<RequestContext,
                     Controllers.CreatedResponse,
@@ -206,31 +276,26 @@ namespace EastFive.Api.Tests
                 Func<TResult> onCreated)
             where TApplication : ITestApplication
         {
-            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Post,
+            return application.GetRequestContext<TResult>(HttpMethod.Post,
                 (request, context) => operation(
                         context,
                         onCreated.CreatedResponse(request)));
         }
 
-        public static Task<TResult> PostDependentAsync<TApplication, TResult>(this TApplication application,
-                Func<RequestContext,
+        public static Task<TResult> PostAsync<TResource, TResult>(this ITestApplication application,
+                Expression<Func<RequestContext,
                     Controllers.CreatedResponse,
-                    Controllers.AlreadyExistsResponse,
-                    Controllers.ReferencedDocumentDoesNotExistsResponse,
-                    Task<HttpResponseMessage>> operation,
-                Func<TResult> onCreated,
-                Func<TResult> onAlreadyExists,
-                Func<TResult> onReferenedDoesNotExists)
-            where TApplication : ITestApplication
+                    Task<HttpResponseMessage>>> operation,
+                Func<TResource, TResult> onCreated,
+                Func<Type, TResult> onOtherResponse)
         {
-            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Post,
-                (request, context) => operation(
+            return application.GetRequestContext<TResult>(HttpMethod.Post,
+                onOtherResponse,
+                (request, context) => operation.Compile()(
                         context,
-                        onCreated.CreatedResponse(request),
-                        onAlreadyExists.AlreadyExistsResponse(request),
-                        onReferenedDoesNotExists.ReferencedDocumentDoesNotExistsResponse(request)));
+                        onCreated.CreatedResponse(request, operation)));
         }
-
+        
         public static Task<TResult> GetMultipartSpecifiedAsync<TResource, TApplication, TResult>(this TApplication application,
                 Func<RequestContext,
                     EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync,
@@ -238,7 +303,7 @@ namespace EastFive.Api.Tests
                 Func<HttpResponseMessage, TResource[], TResult> onResponse)
             where TApplication : ITestApplication
         {
-            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TResult>(HttpMethod.Get,
                 (request, context) => operation(context, onResponse.MultipartAcceptArrayResponseAsync(request)));
         }
 
@@ -252,7 +317,7 @@ namespace EastFive.Api.Tests
             where TApplication : ITestApplication
             where TResource : class
         {
-            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TResult>(HttpMethod.Get,
                 (request, context) => operation(context,
                     onResponse.ContentResponse(request),
                     onNotFound.NotFoundResponse(request)));
@@ -267,7 +332,7 @@ namespace EastFive.Api.Tests
                 Func<HttpResponseMessage, TResult> onReferencedNotFound)
             where TApplication : ITestApplication
         {
-            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TResult>(HttpMethod.Get,
                 (request, context) => operation(context,
                     onResponse.MultipartAcceptArrayResponseAsync(request),
                     onReferencedNotFound.MultipartReferencedNotFoundResponse(request)));
@@ -280,7 +345,7 @@ namespace EastFive.Api.Tests
                 Func<HttpResponseMessage, TResource[], TResult> onResponse)
             where TApplication : ITestApplication
         {
-            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TResult>(HttpMethod.Get,
                 (request, context) => operation(context,
                     onResponse.MultipartAcceptArrayResponseAsync(request)));
         }
