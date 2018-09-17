@@ -58,7 +58,24 @@ namespace EastFive.Api.Tests
             return onSuccess(userId, stateId, default(Guid?), tokensFromResponse).ToTask();
         }
 
-        
+        public TResult ParseCredentailParameters<TResult>(IDictionary<string, string> tokensFromResponse, Func<string, Guid?, Guid?, TResult> onSuccess, Func<string, TResult> onFailure)
+        {
+            var idToken = tokensFromResponse[ProvideLoginMock.extraParamToken];
+            if (!tokens.ContainsKey(idToken))
+                return onFailure("Token not found");
+            var userId = tokens[idToken];
+
+            var stateId = default(Guid?);
+            if (tokensFromResponse.ContainsKey(ProvideLoginMock.extraParamState))
+            {
+                var stateIdString = tokensFromResponse[ProvideLoginMock.extraParamState];
+                stateId = Guid.Parse(stateIdString);
+            }
+
+            return onSuccess(userId, stateId, default(Guid?));
+        }
+
+
         public static string GetToken(string userId)
         {
             var token = Guid.NewGuid().ToString();
