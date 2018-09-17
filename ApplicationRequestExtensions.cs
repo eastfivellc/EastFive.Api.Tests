@@ -1,15 +1,25 @@
 ﻿using BlackBarLabs.Extensions;
+using EastFive.Collections.Generic;
+using EastFive.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Routing;
+
+using EastFive;
+using EastFive.Extensions;
+using EastFive.Api.Controllers;
+using BlackBarLabs.Api.Resources;
 
 namespace EastFive.Api.Tests
 {
@@ -114,12 +124,122 @@ namespace EastFive.Api.Tests
             {
                 var resource = Activator.CreateInstance<TResource>();
                 var body = operation.Body;
+                var methodCall = body as MethodCallExpression;
+                
+                var propertyLookup = typeof(TResource)
+                    .GetProperties()
+                    .Where(prop => prop.ContainsCustomAttribute<JsonPropertyAttribute>())
+                    .Select(prop => prop.PairWithKey(prop.GetCustomAttribute(
+                        (JsonPropertyAttribute attribute) => attribute.PropertyName,
+                        () => string.Empty)))
+                    .ToDictionary();
+
+                var parameters = methodCall.Method.GetParameters();
+                var parameterLookup = parameters
+                    .Select(paramInfo => paramInfo.GetCustomAttribute<QueryValidationAttribute, KeyValuePair<string, string>?>(
+                        qvAttr => qvAttr.Name.PairWithKey(paramInfo.Name),
+                        () => default(KeyValuePair<string, string>?)))
+                    .SelectWhereHasValue()
+                    .ToDictionary();
+
+                var arguments = methodCall.Arguments
+                    .Zip(parameters, (arg, param) => arg.PairWithValue(param))
+                    .Where(argParam => parameterLookup.ContainsKey(argParam.Value.Name))
+                    .Where(argParam => propertyLookup.ContainsKey(parameterLookup[argParam.Value.Name]))
+                    .Select(
+                        argParam =>
+                        {
+                            var argument = argParam.Key;
+                            var value = ResolveMemberExpression(argument);
+                            var type = argument.Type;
+                            var propInfo = propertyLookup[parameterLookup[argParam.Value.Name]];
+                            propInfo.SetValue(resource, value);
+
+                            return value;
+                        })
+                    .ToArray();
 
                 var attached = new AttachedHttpResponseMessage<TResult>(
-                    onCreated(default(TResource)),
-                    request.CreateResponse(System.Net.HttpStatusCode.Created));
+                    onCreated(resource),
+                    request.CreateResponse(HttpStatusCode.Created));
                 return attached;
             };
+        }
+
+        private static KeyValuePair<Type, object>[] ResolveArgs<T>(Expression<Func<T, object>> expression)
+        {
+            var body = (System.Linq.Expressions.MethodCallExpression)expression.Body;
+            var values = new List<KeyValuePair<Type, object>>();
+            
+            return values.ToArray();
+        }
+
+        private static object ResolveMemberExpression(Expression expression)
+        {
+            if (expression is MemberExpression)
+            {
+                return GetValue((MemberExpression)expression);
+            }
+
+            if (expression is UnaryExpression)
+            {
+                // if casting is involved, Expression is not x => x.FieldName but x => Convert(x.Fieldname)
+                return GetValue((MemberExpression)((UnaryExpression)expression).Operand);
+            }
+
+            if (expression is ParameterExpression)
+            {
+                // if casting is involved, Expression is not x => x.FieldName but x => Convert(x.Fieldname)
+                var value = Expression.Lambda(expression as ParameterExpression).Compile().DynamicInvoke();
+                return value;
+            }
+            
+            if (expression is LambdaExpression)
+            {
+                var lambdaExpression = expression as System.Linq.Expressions.LambdaExpression;
+                return null;
+            }
+
+            try
+            {
+                var value = Expression.Lambda(expression).Compile().DynamicInvoke();
+                return value;
+            }
+            catch(Exception ex)
+            {
+                return null;
+            }
+        }
+
+        private static object GetValue(MemberExpression exp)
+        {
+            // expression is ConstantExpression or FieldExpression
+            if (exp.Expression is ConstantExpression)
+            {
+                return (((ConstantExpression)exp.Expression).Value)
+                        .GetType()
+                        .GetField(exp.Member.Name)
+                        .GetValue(((ConstantExpression)exp.Expression).Value);
+            }
+
+            if (exp.Expression is MemberExpression)
+            {
+                return GetValue((MemberExpression)exp.Expression);
+            }
+
+            if (exp.Expression is MethodCallExpression)
+            {
+                try
+                {
+                    var value = Expression.Lambda(exp.Expression as MethodCallExpression).Compile().DynamicInvoke();
+                    return value;
+                } catch (Exception ex)
+                {
+                    ex.GetType();
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         private static Controllers.AlreadyExistsResponse AlreadyExistsResponse<TResult>(this Func<TResult> onAlreadyExists, HttpRequestMessage request)
