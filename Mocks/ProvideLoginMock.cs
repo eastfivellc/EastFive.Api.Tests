@@ -11,6 +11,7 @@ using EastFive.Api.Azure.Credentials;
 
 namespace EastFive.Api.Tests
 {
+    [Azure.Credentials.Attributes.IntegrationName("Mock")]
     public class ProvideLoginMock : IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
         IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideToken
     {

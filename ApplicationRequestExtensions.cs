@@ -17,6 +17,7 @@ using System.Web.Http;
 using System.Web.Http.Routing;
 
 using EastFive;
+using EastFive.Reflection;
 using EastFive.Extensions;
 using EastFive.Api.Controllers;
 using BlackBarLabs.Api.Resources;
@@ -38,8 +39,8 @@ namespace EastFive.Api.Tests
 
         }
 
-        private static HttpRequestMessage GetRequest<TApplication>(this TApplication application, HttpMethod method)
-            where TApplication : ITestApplication
+        private static HttpRequestMessage GetRequest<TApplication>(this ITestApplication<TApplication> application, HttpMethod method)
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
             var hostingLocation = Web.Configuration.Settings.GetUri(
                     AppSettings.ServerUrl,
@@ -90,7 +91,12 @@ namespace EastFive.Api.Tests
             return httpRequest;
         }
 
-        private class AttachedHttpResponseMessage<TResult> : HttpResponseMessage
+        private interface IReturnResult
+        {
+            TResult GetResultCasted<TResult>();
+        }
+
+        private class AttachedHttpResponseMessage<TResult> : HttpResponseMessage, IReturnResult
         {
             public TResult Result { get; }
             public HttpResponseMessage Inner { get; }
@@ -100,7 +106,234 @@ namespace EastFive.Api.Tests
                 this.Result = result;
                 this.Inner = inner;
             }
+
+            public TResult1 GetResultCasted<TResult1>()
+            {
+                return (TResult1)(this.Result as object);
+            }
         }
+
+        
+
+        //public static Task<TResult> PostAsync<TApplication, T1, T2, T3, T4, T5, T6, T7, T8, TRefDoc1, TRefDoc2, TResource, TResult>(
+        //    this ITestApplication<TApplication> application,
+        //        Func<
+        //            T1, T2, T3, T4, T5, T6, T7, T8,
+        //            EastFive.Api.Controllers.Security, TApplication,
+        //            EastFive.Api.Controllers.CreatedResponse,
+        //            EastFive.Api.Controllers.BadRequestResponse,
+        //            EastFive.Api.Controllers.AlreadyExistsResponse,
+        //            EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRefDoc1>,
+        //            EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRefDoc2>,
+        //            Task<HttpResponseMessage>> operation,
+        //        T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8,
+        //    Func<TResource, TResult> onCreated = default(Func<TResource, TResult>),
+        //    Func<TResult> onBadRequest = default(Func<TResult>),
+        //    Func<TResult> onExists = default(Func<TResult>),
+        //    Func<TRefDoc1, TResult> onRefDoesNotExists1 = default(Func<TRefDoc1, TResult>),
+        //    Func<TRefDoc2, TResult> onRefDoesNotExists2 = default(Func<TRefDoc2, TResult>))
+        //    where TApplication : EastFive.Api.Azure.AzureApplication
+        //{
+        //    return GetRequestContext<TApplication, TResult>(application, HttpMethod.Post,
+        //        (request, context) =>
+        //        {
+        //            var resource = Activator.CreateInstance<TResource>();
+        //            var properties = typeof(TResource)
+        //                .GetProperties()
+        //                .Select(propInfo => propInfo.GetCustomAttribute<JsonPropertyAttribute, KeyValuePair<string, PropertyInfo>?>(
+        //                    (jsonPropAttr) => jsonPropAttr.PropertyName.PairWithValue(propInfo),
+        //                    () => default(KeyValuePair<string, PropertyInfo>?)))
+        //                .SelectWhereHasValue()
+        //                .ToDictionary();
+        //            var parameters = operation
+        //                .Method
+        //                .GetParameters()
+        //                .Select(param => param.GetCustomAttribute<EastFive.Api.QueryValidationAttribute, KeyValuePair<string, ParameterInfo>?>(
+        //                    (attr) => param.PairWithKey(attr.Name),
+        //                    () => default(KeyValuePair<string, ParameterInfo>?)))
+        //                .SelectWhereHasValue()
+        //                .ToDictionary();
+        //            var stackTrace = new System.Diagnostics.StackTrace();
+        //            //stackTrace.GetFrame(0).GetMethod().Para
+        //            var values = new object[] { value1, value2, value3 };
+
+        //            var azureApplication = application as TApplication;
+
+        //            var dictionary = properties
+        //                .IntersectKeys(parameters,
+        //                    (propInfo, paramInfo) =>
+        //                    {
+        //                        var value = values[paramInfo.Position];
+        //                        var valueConverted = application.CastResourceProperty(value, propInfo.PropertyType);
+        //                        return valueConverted.PairWithKey(propInfo);
+        //                    })
+        //                .SelectValues()
+        //                .ToDictionary();
+
+        //            resource.PopulateType(dictionary);
+
+        //            return operation(value1, value2, value3, value4, value5, value6, value7, value8, azureApplication, context.urlHelper,
+        //                CreatedResponse(onCreated, resource, request),
+        //                BadRequestResponse(onBadRequest, request),
+        //                AlreadyExistsResponse(onExists, request),
+        //                ReferencedDocumentDoesNotExistsResponse<TRefDoc1, TResult>(() => onRefDoesNotExists1(default(TRefDoc1)), request),
+        //                ReferencedDocumentDoesNotExistsResponse<TRefDoc2, TResult>(() => onRefDoesNotExists2(default(TRefDoc2)), request));
+        //        });
+        //}
+
+        public static Task<TResult> PostAsync<TApplication, T1, T2, T3, TResource, TRefDoc, TResult>(
+            this ITestApplication<TApplication> application,
+                Func<
+                    T1, T2, T3,
+                    TApplication,
+                    System.Web.Http.Routing.UrlHelper,
+                    EastFive.Api.Controllers.CreatedResponse,
+                    EastFive.Api.Controllers.BadRequestResponse,
+                    EastFive.Api.Controllers.AlreadyExistsResponse,
+                    EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRefDoc>,
+                    Task<HttpResponseMessage>> operation,
+                T1 value1, T2 value2, T3 value3,
+            Func<TResource, TResult> onCreated = default(Func<TResource, TResult>),
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onExists = default(Func<TResult>),
+            Func<TRefDoc, TResult> onRefDoesNotExists = default(Func<TRefDoc, TResult>))
+            where TApplication : EastFive.Api.Azure.AzureApplication
+        {
+            return GetRequestContext<TApplication, TResult>(application, HttpMethod.Post,
+                (request, context) =>
+                {
+                    var resource = Activator.CreateInstance<TResource>();
+                    var properties = typeof(TResource)
+                        .GetProperties()
+                        .Select(propInfo => propInfo.GetCustomAttribute<JsonPropertyAttribute, KeyValuePair<string, PropertyInfo>?>(
+                            (jsonPropAttr) => jsonPropAttr.PropertyName.PairWithValue(propInfo),
+                            () => default(KeyValuePair<string, PropertyInfo>?)))
+                        .SelectWhereHasValue()
+                        .ToDictionary();
+                    var parameters = operation
+                        .Method
+                        .GetParameters()
+                        .Select(param => param.GetCustomAttribute<EastFive.Api.QueryValidationAttribute, KeyValuePair<string, ParameterInfo>?>(
+                            (attr) => param.PairWithKey(attr.Name),
+                            () => default(KeyValuePair<string, ParameterInfo>?)))
+                        .SelectWhereHasValue()
+                        .ToDictionary();
+                    var stackTrace = new System.Diagnostics.StackTrace();
+                    //stackTrace.GetFrame(0).GetMethod().Para
+                    var values = new object[] { value1, value2, value3 };
+
+                    var azureApplication = application as TApplication;
+
+                    var dictionary = properties
+                        .IntersectKeys(parameters,
+                            (propInfo, paramInfo) =>
+                            {
+                                var value = values[paramInfo.Position];
+                                var valueConverted = application.CastResourceProperty(value, propInfo.PropertyType);
+                                return valueConverted.PairWithKey(propInfo);
+                            })
+                        .SelectValues()
+                        .ToDictionary();
+
+                    resource.PopulateType(dictionary);
+
+                    return operation(value1, value2, value3, azureApplication, context.urlHelper,
+                        CreatedResponse(onCreated, resource, request),
+                        BadRequestResponse(onBadRequest, request),
+                        AlreadyExistsResponse(onExists, request),
+                        ReferencedDocumentDoesNotExistsResponse<TRefDoc, TResult>(() => onRefDoesNotExists(default(TRefDoc)), request));
+                });
+        }
+
+        #region Response types
+        
+        private static EastFive.Api.Controllers.CreatedResponse CreatedResponse<TResource, TResult>(Func<TResource, TResult> onCreated, TResource resource, HttpRequestMessage request)
+        {
+            return () =>
+            {
+                var result = onCreated(resource);
+                var attached = new AttachedHttpResponseMessage<TResult>(
+                    result,
+                    request.CreateResponse(System.Net.HttpStatusCode.Created));
+                return attached;
+            };
+        }
+
+        private static EastFive.Api.Controllers.BadRequestResponse BadRequestResponse<TResult>(Func<TResult> onBadRequest, HttpRequestMessage request)
+        {
+            return () => new AttachedHttpResponseMessage<TResult>(
+                    onBadRequest(),
+                    request.CreateResponse(System.Net.HttpStatusCode.BadRequest));
+        }
+
+        private static EastFive.Api.Controllers.AlreadyExistsResponse AlreadyExistsResponse<TResult>(this Func<TResult> onAlreadyExists, HttpRequestMessage request)
+        {
+            return () => new AttachedHttpResponseMessage<TResult>(
+                    onAlreadyExists(),
+                    request.CreateResponse(System.Net.HttpStatusCode.Conflict));
+        }
+
+        private static EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRef> ReferencedDocumentDoesNotExistsResponse<TRef, TResult>(
+            this Func<TResult> onReferenedDoesNotExists, HttpRequestMessage request)
+        {
+            return () => new AttachedHttpResponseMessage<TResult>(
+                    onReferenedDoesNotExists(),
+                    request.CreateResponse(System.Net.HttpStatusCode.BadRequest));
+        }
+
+        private static EastFive.Api.Controllers.ContentResponse ContentResponse<TResource, TResult>(this Func<HttpResponseMessage, TResource, TResult> onContent, HttpRequestMessage request)
+            where TResource : class
+        {
+            return (content, contentType) =>
+            {
+                var response = request.CreateResponse(System.Net.HttpStatusCode.OK);
+                var attached = new AttachedHttpResponseMessage<TResult>(
+                    onContent(response, content as TResource),
+                    response);
+                return attached;
+            };
+        }
+
+        private static EastFive.Api.Controllers.NotFoundResponse NotFoundResponse<TResult>(this Func<HttpResponseMessage, TResult> onNotFound, HttpRequestMessage request)
+        {
+            return () =>
+            {
+                var response = request.CreateResponse(System.Net.HttpStatusCode.NotFound);
+                var attached = new AttachedHttpResponseMessage<TResult>(
+                    onNotFound(response),
+                    response);
+                return attached;
+            };
+        }
+
+        private static EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync MultipartAcceptArrayResponseAsync<TResource, TResult>(
+            this Func<HttpResponseMessage, TResource[], TResult> onResponse, HttpRequestMessage request)
+        {
+            return (IEnumerable<object> objects) =>
+            {
+                var response = request.CreateResponse(System.Net.HttpStatusCode.OK);
+                var result = onResponse(response,
+                    objects.Cast<TResource>().ToArray());
+                var responseInnerAttached = new AttachedHttpResponseMessage<TResult>(
+                    result, response);
+                var responseTask = responseInnerAttached.ToTask<HttpResponseMessage>();
+                return responseTask;
+            };
+        }
+
+        private static EastFive.Api.Controllers.ReferencedDocumentNotFoundResponse MultipartReferencedNotFoundResponse<TResult>(
+            this Func<HttpResponseMessage, TResult> onResponse, HttpRequestMessage request)
+        {
+            return () =>
+            {
+                var response = request.CreateResponse(System.Net.HttpStatusCode.OK);
+                var result = onResponse(response);
+                return new AttachedHttpResponseMessage<TResult>(
+                    result, response);
+            };
+        }
+
+        #endregion
 
         #region Response types
 
@@ -241,77 +474,12 @@ namespace EastFive.Api.Tests
 
             throw new NotImplementedException();
         }
-
-        private static Controllers.AlreadyExistsResponse AlreadyExistsResponse<TResult>(this Func<TResult> onAlreadyExists, HttpRequestMessage request)
-        {
-            return () => new AttachedHttpResponseMessage<TResult>(
-                    onAlreadyExists(),
-                    request.CreateResponse(System.Net.HttpStatusCode.Conflict));
-        }
-
-        private static Controllers.ReferencedDocumentDoesNotExistsResponse<TRef> ReferencedDocumentDoesNotExistsResponse<TRef, TResult>(this Func<TResult> onReferenedDoesNotExists, HttpRequestMessage request)
-        {
-            return () => new AttachedHttpResponseMessage<TResult>(
-                    onReferenedDoesNotExists(),
-                    request.CreateResponse(System.Net.HttpStatusCode.BadRequest));
-        }
-
-        private static Controllers.ContentResponse ContentResponse<TResource, TResult>(this Func<HttpResponseMessage, TResource, TResult> onContent, HttpRequestMessage request)
-            where TResource : class
-        {
-            return (content, contentType) =>
-            {
-                var response = request.CreateResponse(System.Net.HttpStatusCode.OK);
-                var attached = new AttachedHttpResponseMessage<TResult>(
-                    onContent(response, content as TResource),
-                    response);
-                return attached;
-            };
-        }
-
-        private static Controllers.NotFoundResponse NotFoundResponse<TResult>(this Func<HttpResponseMessage, TResult> onNotFound, HttpRequestMessage request)
-        {
-            return () =>
-            {
-                var response = request.CreateResponse(System.Net.HttpStatusCode.NotFound);
-                var attached = new AttachedHttpResponseMessage<TResult>(
-                    onNotFound(response),
-                    response);
-                return attached;
-            };
-        }
-
-        private static Controllers.MultipartAcceptArrayResponseAsync MultipartAcceptArrayResponseAsync<TResource, TResult>(
-            this Func<HttpResponseMessage, TResource[], TResult> onResponse, HttpRequestMessage request)
-        {
-            return (IEnumerable<object> objects) =>
-            {
-                var response = request.CreateResponse(System.Net.HttpStatusCode.OK);
-                var result = onResponse(response,
-                    objects.Cast<TResource>().ToArray());
-                var responseInnerAttached = new AttachedHttpResponseMessage<TResult>(
-                    result, response);
-                var responseTask = responseInnerAttached.ToTask<HttpResponseMessage>();
-                return responseTask;
-            };
-        }
-
-        private static Controllers.ReferencedDocumentNotFoundResponse MultipartReferencedNotFoundResponse<TResult>(
-            this Func<HttpResponseMessage, TResult> onResponse, HttpRequestMessage request)
-        {
-            return () =>
-            {
-                var response = request.CreateResponse(System.Net.HttpStatusCode.OK);
-                var result = onResponse(response);
-                return new AttachedHttpResponseMessage<TResult>(
-                    result, response);
-            };
-        }
-
+        
         #endregion
-
-        private static Task<TResult> GetRequestContext<TResult>(this ITestApplication application, HttpMethod method,
+        
+        public static Task<TResult> GetRequestContext<TApplication, TResult>(this ITestApplication<TApplication> application, HttpMethod method,
             Func<HttpRequestMessage, RequestContext, Task<HttpResponseMessage>> callback)
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
             var request = application.GetRequest(method);
             return Web.Configuration.Settings.GetString(
@@ -333,8 +501,9 @@ namespace EastFive.Api.Tests
                     };
 
                     var response = await callback(request, requestContext);
-                    var attachedResponse = response as AttachedHttpResponseMessage<TResult>;
-                    return attachedResponse.Result;
+                    var attachedResponse = response as IReturnResult;
+                    var result = attachedResponse.GetResultCasted<TResult>();
+                    return result;
                 },
                 (why) =>
                 {
@@ -343,9 +512,10 @@ namespace EastFive.Api.Tests
                 });
         }
 
-        private static Task<TResult> GetRequestContext<TResult>(this ITestApplication application, HttpMethod method,
+        private static Task<TResult> GetRequestContext<TApplication, TResult>(this ITestApplication<TApplication> application, HttpMethod method,
             Func<Type, TResult> onOtherResponse,
-            Func<HttpRequestMessage, RequestContext, Task<HttpResponseMessage>> callback)
+            Func<HttpRequestMessage, RequestContext, Task<HttpResponseMessage>> callback) 
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
             var request = application.GetRequest(method);
             return Web.Configuration.Settings.GetString(
@@ -389,91 +559,86 @@ namespace EastFive.Api.Tests
                 });
         }
 
-        public static Task<TResult> PostAsync<TApplication, TResult>(this TApplication application,
+        public static Task<TResult> PostAsync<TApplication, TResult>(this ITestApplication<TApplication> application,
                 Func<RequestContext,
                     Controllers.CreatedResponse,
                     Task<HttpResponseMessage>> operation,
                 Func<TResult> onCreated)
-            where TApplication : ITestApplication
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
-            return application.GetRequestContext<TResult>(HttpMethod.Post,
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Post,
                 (request, context) => operation(
                         context,
                         onCreated.CreatedResponse(request)));
         }
 
-        public static Task<TResult> PostAsync<TResource, TResult>(this ITestApplication application,
+        public static Task<TResult> PostAsync<TApplication, TResource, TResult>(this ITestApplication<TApplication> application,
                 Expression<Func<RequestContext,
                     Controllers.CreatedResponse,
                     Task<HttpResponseMessage>>> operation,
                 Func<TResource, TResult> onCreated,
                 Func<Type, TResult> onOtherResponse)
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
-            return application.GetRequestContext<TResult>(HttpMethod.Post,
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Post,
                 onOtherResponse,
                 (request, context) => operation.Compile()(
                         context,
                         onCreated.CreatedResponse(request, operation)));
         }
         
-        public static Task<TResult> GetMultipartSpecifiedAsync<TResource, TApplication, TResult>(this TApplication application,
+        public static Task<TResult> GetMultipartSpecifiedAsync<TResource, TApplication, TResult>(this ITestApplication<TApplication> application,
                 Func<RequestContext,
                     EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync,
                     Task<HttpResponseMessage>> operation,
                 Func<HttpResponseMessage, TResource[], TResult> onResponse)
-            where TApplication : ITestApplication
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
-            return application.GetRequestContext<TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
                 (request, context) => operation(context, onResponse.MultipartAcceptArrayResponseAsync(request)));
         }
 
-        public static Task<TResult> GetByIdAsync<TResource, TApplication, TResult>(this TApplication application,
+        public static Task<TResult> GetByIdAsync<TResource, TApplication, TResult>(this ITestApplication<TApplication> application,
                 Func<RequestContext,
                     Controllers.ContentResponse,
                     Controllers.NotFoundResponse,
                     Task<HttpResponseMessage>> operation,
                 Func<HttpResponseMessage, TResource, TResult> onResponse,
                 Func<HttpResponseMessage, TResult> onNotFound)
-            where TApplication : ITestApplication
+            where TApplication : EastFive.Api.Azure.AzureApplication
             where TResource : class
         {
-            return application.GetRequestContext<TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
                 (request, context) => operation(context,
                     onResponse.ContentResponse(request),
                     onNotFound.NotFoundResponse(request)));
         }
 
-        public static Task<TResult> GetByRelatedAsync<TResource, TApplication, TResult>(this TApplication application,
+        public static Task<TResult> GetByRelatedAsync<TResource, TApplication, TResult>(this ITestApplication<TApplication> application,
                 Func<RequestContext,
                     Controllers.MultipartAcceptArrayResponseAsync,
                     Controllers.ReferencedDocumentNotFoundResponse,
                     Task<HttpResponseMessage>> operation,
                 Func<HttpResponseMessage, TResource[], TResult> onResponse,
                 Func<HttpResponseMessage, TResult> onReferencedNotFound)
-            where TApplication : ITestApplication
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
-            return application.GetRequestContext<TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
                 (request, context) => operation(context,
                     onResponse.MultipartAcceptArrayResponseAsync(request),
                     onReferencedNotFound.MultipartReferencedNotFoundResponse(request)));
         }
 
-        public static Task<TResult> GetAllAsync<TResource, TApplication, TResult>(this TApplication application,
+        public static Task<TResult> GetAllAsync<TResource, TApplication, TResult>(this ITestApplication<TApplication> application,
                 Func<RequestContext,
                     Controllers.MultipartAcceptArrayResponseAsync,
                     Task<HttpResponseMessage>> operation,
                 Func<HttpResponseMessage, TResource[], TResult> onResponse)
-            where TApplication : ITestApplication
+            where TApplication : EastFive.Api.Azure.AzureApplication
         {
-            return application.GetRequestContext<TResult>(HttpMethod.Get,
+            return application.GetRequestContext<TApplication, TResult>(HttpMethod.Get,
                 (request, context) => operation(context,
                     onResponse.MultipartAcceptArrayResponseAsync(request)));
-        }
-
-        public static Task<HttpResponseMessage> PostAsync<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
-            Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Task<HttpResponseMessage>> action, object resource, Action<HttpRequestMessage> mutateRequest = null)
-        {
-            throw new NotImplementedException();
         }
     }
 }
