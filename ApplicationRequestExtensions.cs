@@ -199,6 +199,21 @@ namespace EastFive.Api.Tests
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
+        {
+            return application.GetAsync(new Expression<Action<TResource>>[] {  },
+                onContent: onContent,
+                onContents: onContents,
+                onBadRequest: onBadRequest,
+                onNotFound: onNotFound,
+                onRefNotFoundType: onRefNotFoundType);
+        }
+
+        public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
                 Expression<Action<TResource>> param1,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
@@ -260,6 +275,30 @@ namespace EastFive.Api.Tests
                 });
         }
 
+        public static Task<TResult> PatchAsync<TResource, TResult>(this ITestApplication application,
+                TResource resource,
+            Func<TResult> onUpdated = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<TResult> onUnauthorized = default(Func<TResult>),
+            Func<string, TResult> onFailure = default(Func<string, TResult>))
+        {
+            application.NoContentResponse(onUpdated);
+            application.NotFoundResponse(onNotFound);
+            application.UnauthorizedResponse(onUnauthorized);
+            application.GeneralConflictResponse(onFailure);
+            return application.MethodAsync<TResource, TResult, TResult>(new HttpMethod("patch"),
+                (request) =>
+                {
+                    request.Content = new StreamContent(JsonConvert.SerializeObject(resource).ToStream());
+                    request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                    return request;
+                },
+                (TResult result) =>
+                {
+                    return result;
+                });
+        }
+        
         #region Response types
 
         private interface IReturnResult
@@ -289,6 +328,125 @@ namespace EastFive.Api.Tests
             }
         }
         
+        private static void ContentResponse<TResource, TResult>(this ITestApplication application,
+            Func<TResource, TResult> onContent)
+        {
+            if (!onContent.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(EastFive.Api.Controllers.ContentResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        EastFive.Api.Controllers.ContentResponse created =
+                            (content, mimeType) =>
+                            {
+                                if (!(content is TResource))
+                                    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
+                                var resource = (TResource)content;
+                                var result = onContent(resource);
+                                return new AttachedHttpResponseMessage<TResult>(result);
+                            };
+                        return onSuccess(created);
+                    });
+        }
+
+        private static void MultipartContentResponse<TResource, TResult>(this ITestApplication application,
+            Func<TResource[], TResult> onContents)
+        {
+            if (onContents.IsDefaultOrNull())
+                return;
+
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync created =
+                            (contents) =>
+                            {
+                                var resources = contents.Cast<TResource>().ToArray();
+                                // TODO: try catch
+                                //if (!(content is TResource))
+                                //    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
+                                var result = onContents(resources);
+                                return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
+                            };
+                    return onSuccess(created);
+                });
+        }
+
+        private static void NoContentResponse<TResult>(this ITestApplication application,
+            Func<TResult> onNoContent)
+        {
+            if (!onNoContent.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(NoContentResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        NoContentResponse created =
+                            () =>
+                            {
+                                var result = onNoContent();
+                                return new AttachedHttpResponseMessage<TResult>(result);
+                            };
+                        return onSuccess(created);
+                    });
+        }
+
+        private static void NotFoundResponse<TResult>(this ITestApplication application,
+            Func<TResult> onNotFound)
+        {
+            if (!onNotFound.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(NotFoundResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        NotFoundResponse created =
+                            () =>
+                            {
+                                var result = onNotFound();
+                                return new AttachedHttpResponseMessage<TResult>(result);
+                            };
+                        return onSuccess(created);
+                    });
+        }
+
+        private static void UnauthorizedResponse<TResult>(this ITestApplication application,
+            Func<TResult> onUnauthorized)
+        {
+            if (!onUnauthorized.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(UnauthorizedResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        UnauthorizedResponse created =
+                            () =>
+                            {
+                                var result = onUnauthorized();
+                                return new AttachedHttpResponseMessage<TResult>(result);
+                            };
+                        return onSuccess(created);
+                    });
+        }
+
+        private static void GeneralConflictResponse<TResult>(this ITestApplication application,
+            Func<string, TResult> onGeneralConflictResponse)
+        {
+            if (!onGeneralConflictResponse.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(GeneralConflictResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        GeneralConflictResponse created =
+                            (reason) =>
+                            {
+                                var result = onGeneralConflictResponse(reason);
+                                return new AttachedHttpResponseMessage<TResult>(result);
+                            };
+                        return onSuccess(created);
+                    });
+        }
+        
+        #region Depricated
+
         private static EastFive.Api.Controllers.CreatedResponse CreatedResponse<TResource, TResult>(Func<TResource, TResult> onCreated, TResource resource, HttpRequestMessage request)
         {
             return () =>
@@ -323,51 +481,6 @@ namespace EastFive.Api.Tests
                     request.CreateResponse(System.Net.HttpStatusCode.BadRequest));
         }
 
-        private static void ContentResponse<TResource, TResult>(this ITestApplication application,
-            Func<TResource, TResult> onContent)
-        {
-            if (!onContent.IsDefaultOrNull())
-                application.SetInstigator(
-                    typeof(EastFive.Api.Controllers.ContentResponse),
-                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
-                    {
-                        EastFive.Api.Controllers.ContentResponse created =
-                            (content, mimeType) =>
-                            {
-                                if (!(content is TResource))
-                                    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
-                                var resource = (TResource)content;
-                                var result = onContent(resource);
-                                return new AttachedHttpResponseMessage<TResult>(result);
-                            };
-                        return onSuccess(created);
-                    });
-        }
-
-        private static void MultipartContentResponse<TResource, TResult>(this ITestApplication application,
-            Func<TResource[], TResult> onContents)
-        {
-            if (onContents.IsDefaultOrNull())
-                return;
-
-            application.SetInstigator(
-                    typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
-                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
-                    {
-                        EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync created =
-                            (contents) =>
-                            {
-                                var resources = contents.Cast<TResource>().ToArray();
-                                // TODO: try catch
-                                //if (!(content is TResource))
-                                //    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
-                                var result = onContents(resources);
-                                return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
-                            };
-                        return onSuccess(created);
-                    });
-        }
-        
         private static EastFive.Api.Controllers.ContentResponse ContentResponse<TResource, TResult>(this Func<HttpResponseMessage, TResource, TResult> onContent, HttpRequestMessage request)
             where TResource : class
         {
@@ -430,6 +543,8 @@ namespace EastFive.Api.Tests
                 return attached;
             };
         }
+
+        #endregion
 
         #endregion
 
