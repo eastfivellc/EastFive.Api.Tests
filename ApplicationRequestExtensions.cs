@@ -246,12 +246,27 @@ namespace EastFive.Api.Tests
                 onRefNotFoundType: onRefNotFoundType);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TResource"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="application"></param>
+        /// <param name="resource"></param>
+        /// <param name="onCreated"></param>
+        /// <param name="onBadRequest"></param>
+        /// <param name="onExists"></param>
+        /// <param name="onRefDoesNotExistsType"></param>
+        /// <param name="onNotImplemented"></param>
+        /// <returns></returns>
+        /// <remarks>Response hooks are only called if the method is actually invoked. Responses from the framework are not trapped.</remarks>
         public static Task<TResult> PostAsync<TResource, TResult>(this ITestApplication application,
                 TResource resource,
             Func<TResult> onCreated = default(Func<TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onExists = default(Func<TResult>),
-            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>))
+            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<TResult> onNotImplemented = default(Func<TResult>))
         {
             if (!onCreated.IsDefaultOrNull())
                 application.SetInstigator(
@@ -260,6 +275,24 @@ namespace EastFive.Api.Tests
                     {
                         EastFive.Api.Controllers.CreatedResponse created = () => new AttachedHttpResponseMessage<TResult>(onCreated());
                         return onSuccess(created);
+                    });
+
+            if (!onExists.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(EastFive.Api.Controllers.AlreadyExistsResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        EastFive.Api.Controllers.AlreadyExistsResponse exists = () => new AttachedHttpResponseMessage<TResult>(onExists());
+                        return onSuccess(exists);
+                    });
+
+            if (!onNotImplemented.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(EastFive.Api.Controllers.NotImplementedResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        EastFive.Api.Controllers.NotImplementedResponse notImplemented = () => new AttachedHttpResponseMessage<TResult>(onNotImplemented());
+                        return onSuccess(notImplemented);
                     });
 
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
