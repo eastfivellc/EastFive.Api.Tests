@@ -7,8 +7,8 @@
     <ProjectGuid>{FD0DE0DA-5FC5-43CA-A99B-8C64FC973EA1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BlackBarLabs.Api.Tests</RootNamespace>
-    <AssemblyName>BlackBarLabs.Api.Tests</AssemblyName>
+    <RootNamespace>EastFive.Api.Tests</RootNamespace>
+    <AssemblyName>EastFive.Api.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -89,6 +89,8 @@
     <Compile Include="Mocks\MockTimeService.cs" />
     <Compile Include="Mocks\ProvideLoginMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="References\ReferenceExtensions.cs" />
+    <Compile Include="References\TestRefs.cs" />
     <Compile Include="Sessions\ITestSession.cs" />
     <Compile Include="Sessions\TestSession.cs" />
     <Compile Include="Helpers\TestSessionHelpers.cs" />
