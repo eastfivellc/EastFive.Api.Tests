@@ -9,12 +9,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using BlackBarLabs.Web;
-using BlackBarLabs.Extensions;
-using BlackBarLabs.Api.Tests.Mocks;
 using EastFive.Api.Services;
 using System.Configuration;
-using BlackBarLabs.Collections.Generic;
 using System.Net.Http.Headers;
 using EastFive.Web.Services;
 using EastFive.Collections.Generic;
@@ -24,6 +20,7 @@ using System.Web.Http.Routing;
 using EastFive.Api.Azure.Credentials.Controllers;
 using EastFive.Api.Azure.Credentials;
 using EastFive.Api.Azure.Credentials.Resources;
+using EastFive.Web;
 
 namespace BlackBarLabs.Api.Tests
 {

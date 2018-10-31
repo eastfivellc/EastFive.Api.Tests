@@ -760,197 +760,122 @@ namespace EastFive.Api.Tests
 
         #region Depricated complex direct invocation
 
-        public static Task<TResult> PostAsync<TApplication, T1, T2, T3, TResource, TRefDoc, TResult>(
-            this ITestApplication application,
-                Func<
-                    T1, T2, T3,
-                    TApplication,
-                    System.Web.Http.Routing.UrlHelper,
-                    EastFive.Api.Controllers.CreatedResponse,
-                    EastFive.Api.Controllers.BadRequestResponse,
-                    EastFive.Api.Controllers.AlreadyExistsResponse,
-                    EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRefDoc>,
-                    Task<HttpResponseMessage>> operation,
-                T1 value1, T2 value2, T3 value3,
-            Func<TResource, TResult> onCreated = default(Func<TResource, TResult>),
-            Func<TResult> onBadRequest = default(Func<TResult>),
-            Func<TResult> onExists = default(Func<TResult>),
-            Func<TRefDoc, TResult> onRefDoesNotExists = default(Func<TRefDoc, TResult>))
-            where TApplication : EastFive.Api.Azure.AzureApplication
-        {
-            return GetRequestContext<TResult>(application, HttpMethod.Post,
-                (request, context) =>
-                {
-                    var resource = Activator.CreateInstance<TResource>();
-                    var properties = typeof(TResource)
-                        .GetProperties()
-                        .Select(propInfo => propInfo.GetCustomAttribute<JsonPropertyAttribute, KeyValuePair<string, PropertyInfo>?>(
-                            (jsonPropAttr) => jsonPropAttr.PropertyName.PairWithValue(propInfo),
-                            () => default(KeyValuePair<string, PropertyInfo>?)))
-                        .SelectWhereHasValue()
-                        .ToDictionary();
-                    var parameters = operation
-                        .Method
-                        .GetParameters()
-                        .Select(param => param.GetCustomAttribute<EastFive.Api.QueryValidationAttribute, KeyValuePair<string, ParameterInfo>?>(
-                            (attr) => param.PairWithKey(attr.Name),
-                            () => default(KeyValuePair<string, ParameterInfo>?)))
-                        .SelectWhereHasValue()
-                        .ToDictionary();
-                    var stackTrace = new System.Diagnostics.StackTrace();
-                    //stackTrace.GetFrame(0).GetMethod().Para
-                    var values = new object[] { value1, value2, value3 };
+        //public static Task<TResult> PostAsync<TApplication, T1, T2, T3, TResource, TRefDoc, TResult>(
+        //    this ITestApplication application,
+        //        Func<
+        //            T1, T2, T3,
+        //            TApplication,
+        //            System.Web.Http.Routing.UrlHelper,
+        //            EastFive.Api.Controllers.CreatedResponse,
+        //            EastFive.Api.Controllers.BadRequestResponse,
+        //            EastFive.Api.Controllers.AlreadyExistsResponse,
+        //            EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRefDoc>,
+        //            Task<HttpResponseMessage>> operation,
+        //        T1 value1, T2 value2, T3 value3,
+        //    Func<TResource, TResult> onCreated = default(Func<TResource, TResult>),
+        //    Func<TResult> onBadRequest = default(Func<TResult>),
+        //    Func<TResult> onExists = default(Func<TResult>),
+        //    Func<TRefDoc, TResult> onRefDoesNotExists = default(Func<TRefDoc, TResult>))
+        //    where TApplication : EastFive.Api.Azure.AzureApplication
+        //{
+        //    return GetRequestContext<TResult>(application, HttpMethod.Post,
+        //        (request, context) =>
+        //        {
+        //            var resource = Activator.CreateInstance<TResource>();
+        //            var properties = typeof(TResource)
+        //                .GetProperties()
+        //                .Select(propInfo => propInfo.GetCustomAttribute<JsonPropertyAttribute, KeyValuePair<string, PropertyInfo>?>(
+        //                    (jsonPropAttr) => jsonPropAttr.PropertyName.PairWithValue(propInfo),
+        //                    () => default(KeyValuePair<string, PropertyInfo>?)))
+        //                .SelectWhereHasValue()
+        //                .ToDictionary();
+        //            var parameters = operation
+        //                .Method
+        //                .GetParameters()
+        //                .Select(param => param.GetCustomAttribute<EastFive.Api.QueryValidationAttribute, KeyValuePair<string, ParameterInfo>?>(
+        //                    (attr) => param.PairWithKey(attr.Name),
+        //                    () => default(KeyValuePair<string, ParameterInfo>?)))
+        //                .SelectWhereHasValue()
+        //                .ToDictionary();
+        //            var stackTrace = new System.Diagnostics.StackTrace();
+        //            //stackTrace.GetFrame(0).GetMethod().Para
+        //            var values = new object[] { value1, value2, value3 };
 
-                    var azureApplication = application as TApplication;
+        //            var azureApplication = application as TApplication;
 
-                    var dictionary = properties
-                        .IntersectKeys(parameters,
-                            (propInfo, paramInfo) =>
-                            {
-                                var value = values[paramInfo.Position];
-                                var valueConverted = application.CastResourceProperty(value, propInfo.PropertyType);
-                                return valueConverted.PairWithKey(propInfo);
-                            })
-                        .SelectValues()
-                        .ToDictionary();
+        //            var dictionary = properties
+        //                .IntersectKeys(parameters,
+        //                    (propInfo, paramInfo) =>
+        //                    {
+        //                        var value = values[paramInfo.Position];
+        //                        var valueConverted = application.CastResourceProperty(value, propInfo.PropertyType);
+        //                        return valueConverted.PairWithKey(propInfo);
+        //                    })
+        //                .SelectValues()
+        //                .ToDictionary();
 
-                    resource.PopulateType(dictionary);
+        //            resource.PopulateType(dictionary);
 
-                    return operation(value1, value2, value3, azureApplication, context.urlHelper,
-                        CreatedResponse(onCreated, resource, request),
-                        BadRequestResponse(onBadRequest, request),
-                        AlreadyExistsResponse(onExists, request),
-                        ReferencedDocumentDoesNotExistsResponse<TRefDoc, TResult>(() => onRefDoesNotExists(default(TRefDoc)), request));
-                });
-        }
+        //            return operation(value1, value2, value3, azureApplication, context.urlHelper,
+        //                CreatedResponse(onCreated, resource, request),
+        //                BadRequestResponse(onBadRequest, request),
+        //                AlreadyExistsResponse(onExists, request),
+        //                ReferencedDocumentDoesNotExistsResponse<TRefDoc, TResult>(() => onRefDoesNotExists(default(TRefDoc)), request));
+        //        });
+        //}
 
-        private static Controllers.CreatedResponse CreatedResponse<TResource, TResult>(this Func<TResource, TResult> onCreated, HttpRequestMessage request,
-            Expression<Func<RequestContext,
-                    Controllers.CreatedResponse,
-                    Task<HttpResponseMessage>>> operation)
-        {
-            return () =>
-            {
-                var resource = Activator.CreateInstance<TResource>();
-                var body = operation.Body;
-                var methodCall = body as MethodCallExpression;
+        //private static Controllers.CreatedResponse CreatedResponse<TResource, TResult>(this Func<TResource, TResult> onCreated, HttpRequestMessage request,
+        //    Expression<Func<RequestContext,
+        //            Controllers.CreatedResponse,
+        //            Task<HttpResponseMessage>>> operation)
+        //{
+        //    return () =>
+        //    {
+        //        var resource = Activator.CreateInstance<TResource>();
+        //        var body = operation.Body;
+        //        var methodCall = body as MethodCallExpression;
 
-                var propertyLookup = typeof(TResource)
-                    .GetProperties()
-                    .Where(prop => prop.ContainsCustomAttribute<JsonPropertyAttribute>())
-                    .Select(prop => prop.PairWithKey(prop.GetCustomAttribute(
-                        (JsonPropertyAttribute attribute) => attribute.PropertyName,
-                        () => string.Empty)))
-                    .ToDictionary();
+        //        var propertyLookup = typeof(TResource)
+        //            .GetProperties()
+        //            .Where(prop => prop.ContainsCustomAttribute<JsonPropertyAttribute>())
+        //            .Select(prop => prop.PairWithKey(prop.GetCustomAttribute(
+        //                (JsonPropertyAttribute attribute) => attribute.PropertyName,
+        //                () => string.Empty)))
+        //            .ToDictionary();
 
-                var parameters = methodCall.Method.GetParameters();
-                var parameterLookup = parameters
-                    .Select(paramInfo => paramInfo.GetCustomAttribute<QueryValidationAttribute, KeyValuePair<string, string>?>(
-                        qvAttr => qvAttr.Name.PairWithKey(paramInfo.Name),
-                        () => default(KeyValuePair<string, string>?)))
-                    .SelectWhereHasValue()
-                    .ToDictionary();
+        //        var parameters = methodCall.Method.GetParameters();
+        //        var parameterLookup = parameters
+        //            .Select(paramInfo => paramInfo.GetCustomAttribute<QueryValidationAttribute, KeyValuePair<string, string>?>(
+        //                qvAttr => qvAttr.Name.PairWithKey(paramInfo.Name),
+        //                () => default(KeyValuePair<string, string>?)))
+        //            .SelectWhereHasValue()
+        //            .ToDictionary();
 
-                var arguments = methodCall.Arguments
-                    .Zip(parameters, (arg, param) => arg.PairWithValue(param))
-                    .Where(argParam => parameterLookup.ContainsKey(argParam.Value.Name))
-                    .Where(argParam => propertyLookup.ContainsKey(parameterLookup[argParam.Value.Name]))
-                    .Select(
-                        argParam =>
-                        {
-                            var argument = argParam.Key;
-                            var value = ResolveMemberExpression(argument);
-                            var type = argument.Type;
-                            var propInfo = propertyLookup[parameterLookup[argParam.Value.Name]];
-                            propInfo.SetValue(resource, value);
+        //        var arguments = methodCall.Arguments
+        //            .Zip(parameters, (arg, param) => arg.PairWithValue(param))
+        //            .Where(argParam => parameterLookup.ContainsKey(argParam.Value.Name))
+        //            .Where(argParam => propertyLookup.ContainsKey(parameterLookup[argParam.Value.Name]))
+        //            .Select(
+        //                argParam =>
+        //                {
+        //                    var argument = argParam.Key;
+        //                    var value = ResolveMemberExpression(argument);
+        //                    var type = argument.Type;
+        //                    var propInfo = propertyLookup[parameterLookup[argParam.Value.Name]];
+        //                    propInfo.SetValue(resource, value);
 
-                            return value;
-                        })
-                    .ToArray();
+        //                    return value;
+        //                })
+        //            .ToArray();
 
-                var attached = new AttachedHttpResponseMessage<TResult>(
-                    onCreated(resource),
-                    request.CreateResponse(HttpStatusCode.Created));
-                return attached;
-            };
-        }
+        //        var attached = new AttachedHttpResponseMessage<TResult>(
+        //            onCreated(resource),
+        //            request.CreateResponse(HttpStatusCode.Created));
+        //        return attached;
+        //    };
+        //}
 
-        private static KeyValuePair<Type, object>[] ResolveArgs<T>(Expression<Func<T, object>> expression)
-        {
-            var body = (System.Linq.Expressions.MethodCallExpression)expression.Body;
-            var values = new List<KeyValuePair<Type, object>>();
 
-            return values.ToArray();
-        }
-
-        private static object ResolveMemberExpression(Expression expression)
-        {
-            if (expression is MemberExpression)
-            {
-                return GetValue((MemberExpression)expression);
-            }
-
-            if (expression is UnaryExpression)
-            {
-                // if casting is involved, Expression is not x => x.FieldName but x => Convert(x.Fieldname)
-                return GetValue((MemberExpression)((UnaryExpression)expression).Operand);
-            }
-
-            if (expression is ParameterExpression)
-            {
-                // if casting is involved, Expression is not x => x.FieldName but x => Convert(x.Fieldname)
-                var value = Expression.Lambda(expression as ParameterExpression).Compile().DynamicInvoke();
-                return value;
-            }
-
-            if (expression is LambdaExpression)
-            {
-                var lambdaExpression = expression as System.Linq.Expressions.LambdaExpression;
-                return null;
-            }
-
-            try
-            {
-                var value = Expression.Lambda(expression).Compile().DynamicInvoke();
-                return value;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
-
-        private static object GetValue(MemberExpression exp)
-        {
-            // expression is ConstantExpression or FieldExpression
-            if (exp.Expression is ConstantExpression)
-            {
-                return (((ConstantExpression)exp.Expression).Value)
-                        .GetType()
-                        .GetField(exp.Member.Name)
-                        .GetValue(((ConstantExpression)exp.Expression).Value);
-            }
-
-            if (exp.Expression is MemberExpression)
-            {
-                return GetValue((MemberExpression)exp.Expression);
-            }
-
-            if (exp.Expression is MethodCallExpression)
-            {
-                try
-                {
-                    var value = Expression.Lambda(exp.Expression as MethodCallExpression).Compile().DynamicInvoke();
-                    return value;
-                }
-                catch (Exception ex)
-                {
-                    ex.GetType();
-                }
-            }
-
-            throw new NotImplementedException();
-        }
 
         #endregion
 
