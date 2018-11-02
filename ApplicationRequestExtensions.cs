@@ -88,7 +88,7 @@ namespace EastFive.Api.Tests
                 (routesApiFound) => routesApiFound,
                 (why) => "DefaultApi");
 
-            var routesMvc = EastFive.Web.Configuration.Settings.GetString(
+            var routesMvcCSV = EastFive.Web.Configuration.Settings.GetString(
                     EastFive.Api.Tests.AppSettings.RoutesMvc,
                 (routesApiFound) => routesApiFound,
                 (why) => "Default");
@@ -111,6 +111,18 @@ namespace EastFive.Api.Tests
                     httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
                     return route;
                 }).First();
+
+            IHttpRoute [] mvcRoutes = routesMvcCSV.Split(new[] { ',' }).Select(
+                routeName =>
+                {
+                    var route = config.Routes.MapHttpRoute(
+                        name: routeName,
+                        routeTemplate: "{controller}/{action}/{id}",
+                        defaults: new { controller = "Default", action = "Index", id = "" }
+                        );
+                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+                    return route;
+                }).ToArray();
 
             var urlTemplate = $"{hostingLocation}/{firstApiRoute.RouteTemplate}";
             //var routeValues = firstApiRoute.Defaults.SelectValues().Append(functionViewControllerAttribute.Route).Reverse().ToArray();
@@ -199,13 +211,16 @@ namespace EastFive.Api.Tests
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
+                Expression<Action<TResource>> param1,
+                Expression<Action<TResource>> param2,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
         {
-            return application.GetAsync(new Expression<Action<TResource>>[] {  },
+            return application.GetAsync(
+                    new Expression<Action<TResource>>[] { param1, param2 },
                 onContent: onContent,
                 onContents: onContents,
                 onBadRequest: onBadRequest,
@@ -222,23 +237,6 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
         {
             return application.GetAsync(new[] { param1 },
-                onContent: onContent,
-                onContents: onContents,
-                onBadRequest: onBadRequest,
-                onNotFound: onNotFound,
-                onRefNotFoundType: onRefNotFoundType);
-        }
-
-        public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
-                Expression<Action<TResource>> param1,
-                Expression<Action<TResource>> param2,
-            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
-            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
-            Func<TResult> onBadRequest = default(Func<TResult>),
-            Func<TResult> onNotFound = default(Func<TResult>),
-            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
-        {
-            return application.GetAsync(new[] { param1, param2 },
                 onContent: onContent,
                 onContents: onContents,
                 onBadRequest: onBadRequest,
