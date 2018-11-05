@@ -24,6 +24,7 @@ using EastFive.Api.Controllers;
 using EastFive.Linq.Expressions;
 using BlackBarLabs.Extensions;
 using BlackBarLabs.Api;
+using EastFive.Linq.Async;
 
 namespace EastFive.Api.Tests
 {
@@ -420,24 +421,37 @@ namespace EastFive.Api.Tests
                     return onSuccess(created);
                 });
 
-            //application.SetInstigatorGeneric(
-            //    typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
-            //    (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
-            //    {
-            //        var refDocMethodInfo = typeof(ApplicationRequestExtensions).GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Static);
-            //        var dele = Delegate.CreateDelegate(type, request, refDocMethodInfo);
-            //        return success((object)dele);
-            //    });
+            application.SetInstigatorGeneric(
+                typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
+                (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    var scope = new CallbackWrapper<TResource, TResult>(onContents);
+                    var multipartResponseMethodInfoGeneric = typeof(CallbackWrapper<TResource, TResult>).GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Instance);
+                    var multipartResponseMethodInfoBound = multipartResponseMethodInfoGeneric; // multipartResponseMethodInfoGeneric.MakeGenericMethod(type.GenericTypeArguments);
+                    var dele = Delegate.CreateDelegate(type, scope, multipartResponseMethodInfoBound);
+                    return onSuccess((object)dele);
+                });
         }
 
-        //public static HttpResponseMessage MultipartResponseAsyncGeneric<TResource, TResult>(Func<TResource[], TResult> onContents)
-        //{
-        //    // TODO: try catch
-        //    //if (!(content is TResource))
-        //    //    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
-        //    var result = onContents(resources);
-        //    return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
-        //}
+        public class CallbackWrapper<TResource, TResult>
+        {
+            private Func<TResource[], TResult> callback;
+
+            public CallbackWrapper(Func<TResource[], TResult> onContents)
+            {
+                this.callback = onContents;
+            }
+
+            public async Task<HttpResponseMessage> MultipartResponseAsyncGeneric(IEnumerableAsync<TResource> resources)
+            {
+                // TODO: try catch
+                //if (!(content is TResource))
+                //    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
+                var resourcesArray = await resources.ToArrayAsync();
+                var result = callback(resourcesArray);
+                return new AttachedHttpResponseMessage<TResult>(result);
+            }
+        }
 
         private static void NoContentResponse<TResult>(this ITestApplication application,
             Func<TResult> onNoContent)
