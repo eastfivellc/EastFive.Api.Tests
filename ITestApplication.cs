@@ -15,5 +15,7 @@ namespace EastFive.Api.Tests
         object CastResourceProperty(object value, Type propertyType);
 
         void SetInstigator(Type type, InstigatorDelegate instigator);
+
+        void SetInstigatorGeneric(Type type, InstigatorDelegateGeneric instigator);
     }
 }

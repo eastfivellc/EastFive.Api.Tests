@@ -211,22 +211,20 @@ namespace EastFive.Api.Tests
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
-                Expression<Action<TResource>> param1,
-                Expression<Action<TResource>> param2,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
         {
-            return application.GetAsync(
-                    new Expression<Action<TResource>>[] { param1, param2 },
+            return application.GetAsync(new Expression<Action<TResource>>[] {  },
                 onContent: onContent,
                 onContents: onContents,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefNotFoundType: onRefNotFoundType);
         }
+
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
                 Expression<Action<TResource>> param1,
@@ -237,6 +235,24 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
         {
             return application.GetAsync(new[] { param1 },
+                onContent: onContent,
+                onContents: onContents,
+                onBadRequest: onBadRequest,
+                onNotFound: onNotFound,
+                onRefNotFoundType: onRefNotFoundType);
+        }
+
+        public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
+                Expression<Action<TResource>> param1,
+                Expression<Action<TResource>> param2,
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
+        {
+            return application.GetAsync(
+                    new Expression<Action<TResource>>[] { param1, param2 },
                 onContent: onContent,
                 onContents: onContents,
                 onBadRequest: onBadRequest,
@@ -403,7 +419,25 @@ namespace EastFive.Api.Tests
                             };
                     return onSuccess(created);
                 });
+
+            //application.SetInstigatorGeneric(
+            //    typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
+            //    (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
+            //    {
+            //        var refDocMethodInfo = typeof(ApplicationRequestExtensions).GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Static);
+            //        var dele = Delegate.CreateDelegate(type, request, refDocMethodInfo);
+            //        return success((object)dele);
+            //    });
         }
+
+        //public static HttpResponseMessage MultipartResponseAsyncGeneric<TResource, TResult>(Func<TResource[], TResult> onContents)
+        //{
+        //    // TODO: try catch
+        //    //if (!(content is TResource))
+        //    //    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
+        //    var result = onContents(resources);
+        //    return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
+        //}
 
         private static void NoContentResponse<TResult>(this ITestApplication application,
             Func<TResult> onNoContent)
