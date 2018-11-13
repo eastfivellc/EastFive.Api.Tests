@@ -12,8 +12,11 @@ namespace EastFive.Api.Tests
     {
         public override bool CanConvert(Type objectType)
         {
-            var canConvert = objectType.IsSubClassOfGeneric(typeof(TestRef<>));
-            return canConvert;
+            if (objectType.IsSubClassOfGeneric(typeof(TestRef<>)))
+                return true;
+            if (objectType.IsSubclassOf(typeof(Type)))
+                return true;
+            return false;
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -23,8 +26,16 @@ namespace EastFive.Api.Tests
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var id = (value as IReferenceable).id;
-            writer.WriteValue(id);
+            if (value is IReferenceable)
+            {
+                var id = (value as IReferenceable).id;
+                writer.WriteValue(id);
+            }
+            if (value is Type)
+            {
+                var stringType = (value as Type).GetClrString();
+                writer.WriteValue(stringType);
+            }
         }
     }
 

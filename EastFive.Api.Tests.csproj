@@ -118,9 +118,9 @@
       <Project>{c6e444da-3991-43e3-a6c8-56db53670970}</Project>
       <Name>BlackBarLabs.SendGrid</Name>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)\BlackBarLabs.Web\BlackBarLabs.Web.csproj">
+    <ProjectReference Include="..\BlackBarLabs.Web\EastFive.Web.csproj">
       <Project>{5bb52391-2704-44c0-bc8a-dbbe31498814}</Project>
-      <Name>BlackBarLabs.Web</Name>
+      <Name>EastFive.Web</Name>
     </ProjectReference>
     <ProjectReference Include="..\EastFive.SessionServer\EastFive.Azure.csproj">
       <Project>{e2f3fcfb-89c8-47b3-b3d2-ae35e52a84fa}</Project>
@@ -129,9 +129,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
