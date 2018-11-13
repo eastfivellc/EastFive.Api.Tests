@@ -189,6 +189,8 @@ namespace EastFive.Api.Tests
         {
             application.ContentResponse(onContent);
             application.MultipartContentResponse(onContents);
+            application.BadRequestResponse(onBadRequest);
+            application.RefNotFoundTypeResponse(onRefNotFoundType);
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
                 (request) =>
                 {
@@ -283,37 +285,15 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<TResult> onNotImplemented = default(Func<TResult>))
         {
-            if (!onCreated.IsDefaultOrNull())
-                application.SetInstigator(
-                    typeof(EastFive.Api.Controllers.CreatedResponse),
-                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
-                    {
-                        EastFive.Api.Controllers.CreatedResponse created = () => new AttachedHttpResponseMessage<TResult>(onCreated());
-                        return onSuccess(created);
-                    });
-
-            if (!onExists.IsDefaultOrNull())
-                application.SetInstigator(
-                    typeof(EastFive.Api.Controllers.AlreadyExistsResponse),
-                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
-                    {
-                        EastFive.Api.Controllers.AlreadyExistsResponse exists = () => new AttachedHttpResponseMessage<TResult>(onExists());
-                        return onSuccess(exists);
-                    });
-
-            if (!onNotImplemented.IsDefaultOrNull())
-                application.SetInstigator(
-                    typeof(EastFive.Api.Controllers.NotImplementedResponse),
-                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
-                    {
-                        EastFive.Api.Controllers.NotImplementedResponse notImplemented = () => new AttachedHttpResponseMessage<TResult>(onNotImplemented());
-                        return onSuccess(notImplemented);
-                    });
+            application.CreatedResponse(onCreated);
+            application.BadRequestResponse(onBadRequest);
+            application.AlreadyExistsResponse(onExists);
+            application.RefNotFoundTypeResponse(onRefDoesNotExistsType);
 
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
                 (request) =>
                 {
-                    var contentJsonString = JsonConvert.SerializeObject(resource);
+                    var contentJsonString = JsonConvert.SerializeObject(resource, new RefConverter());
                     request.Content = new StreamContent(contentJsonString.ToStream());
                     request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                     return request;
@@ -398,6 +378,113 @@ namespace EastFive.Api.Tests
                     });
         }
 
+        private static void BadRequestResponse<TResult>(this ITestApplication application,
+            Func<TResult> onBadRequest)
+        {
+            if (!onBadRequest.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(EastFive.Api.Controllers.BadRequestResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        EastFive.Api.Controllers.BadRequestResponse badRequest =
+                            () =>
+                            {
+                                var result = onBadRequest();
+                                return new AttachedHttpResponseMessage<TResult>(result);
+                            };
+                        return onSuccess(badRequest);
+                    });
+        }
+        
+        private static void RefNotFoundTypeResponse<TResult>(this ITestApplication application,
+            Func<Type, TResult> referencedDocDoesNotExists)
+        {
+            if (referencedDocDoesNotExists.IsDefaultOrNull())
+                return;
+
+            application.SetInstigatorGeneric(
+                typeof(ReferencedDocumentDoesNotExistsResponse<>),
+                (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    var scope = new CallbackWrapperReferencedDocumentDoesNotExistsResponse<TResult>(referencedDocDoesNotExists);
+                    var multipartResponseMethodInfoGeneric = typeof(CallbackWrapperReferencedDocumentDoesNotExistsResponse<TResult>)
+                        .GetMethod("RefNotFoundTypeResponseGeneric", BindingFlags.Public | BindingFlags.Instance);
+                    var multipartResponseMethodInfoBound = multipartResponseMethodInfoGeneric
+                        .MakeGenericMethod(type.GenericTypeArguments);
+                    var dele = Delegate.CreateDelegate(type, scope, multipartResponseMethodInfoBound);
+                    return onSuccess((object)dele);
+                });
+        }
+
+        private static void CreatedResponse<TResult>(this ITestApplication application,
+            Func<TResult> onCreated)
+        {
+            if (onCreated.IsDefaultOrNull())
+                return;
+
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.CreatedResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.CreatedResponse created = () => new AttachedHttpResponseMessage<TResult>(onCreated());
+                    return onSuccess(created);
+                });
+            
+        }
+        
+        private static void AlreadyExistsResponse<TResult>(this ITestApplication application,
+            Func<TResult> onAlreadyExists)
+        {
+            if (onAlreadyExists.IsDefaultOrNull())
+                return;
+            
+            if (!onAlreadyExists.IsDefaultOrNull())
+                application.SetInstigator(
+                    typeof(EastFive.Api.Controllers.AlreadyExistsResponse),
+                    (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                    {
+                        EastFive.Api.Controllers.AlreadyExistsResponse exists = () => new AttachedHttpResponseMessage<TResult>(onAlreadyExists());
+                        return onSuccess(exists);
+                    });
+        }
+
+
+        private static void NotImplementedResponse<TResult>(this ITestApplication application,
+            Func<TResult> onNotImplemented)
+        {
+            if (onNotImplemented.IsDefaultOrNull())
+                return;
+
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.NotImplementedResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.NotImplementedResponse notImplemented = () => new AttachedHttpResponseMessage<TResult>(onNotImplemented());
+                    return onSuccess(notImplemented);
+                });
+        }
+
+        public class CallbackWrapperReferencedDocumentDoesNotExistsResponse<TResult>
+        {
+            private Func<Type, TResult> callback;
+
+            public CallbackWrapperReferencedDocumentDoesNotExistsResponse(Func<Type, TResult> onContents)
+            {
+                this.callback = onContents;
+            }
+
+            public HttpResponseMessage RefNotFoundTypeResponseGeneric<TResource>()
+            {
+                var result = callback(typeof(TResource));
+                return new AttachedHttpResponseMessage<TResult>(result);
+            }
+        }
+
+        private static void RefNotFoundTypeResponseGeneric<T>()
+        {
+
+        }
+
         private static void MultipartContentResponse<TResource, TResult>(this ITestApplication application,
             Func<TResource[], TResult> onContents)
         {
@@ -441,7 +528,7 @@ namespace EastFive.Api.Tests
             {
                 this.callback = onContents;
             }
-
+            
             public async Task<HttpResponseMessage> MultipartResponseAsyncGeneric(IEnumerableAsync<TResource> resources)
             {
                 // TODO: try catch
@@ -451,8 +538,9 @@ namespace EastFive.Api.Tests
                 var result = callback(resourcesArray);
                 return new AttachedHttpResponseMessage<TResult>(result);
             }
+            
         }
-
+        
         private static void NoContentResponse<TResult>(this ITestApplication application,
             Func<TResult> onNoContent)
         {
