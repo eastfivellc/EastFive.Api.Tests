@@ -11,10 +11,14 @@ using EastFive.Api.Azure.Credentials;
 
 namespace EastFive.Api.Tests
 {
-    [Azure.Credentials.Attributes.IntegrationName("Mock")]
+    [Azure.Credentials.Attributes.IntegrationName(IntegrationName)]
     public class ProvideLoginMock : IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
         IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideToken
     {
+        public const string IntegrationName = "Mock";
+        public string Method => IntegrationName;
+
+
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
         private static Dictionary<string, string> tokens = new Dictionary<string, string>();
         public static CredentialValidationMethodTypes method;
@@ -22,7 +26,7 @@ namespace EastFive.Api.Tests
         public const string extraParamToken = "token";
         public const string extraParamState = "state";
 
-        [Azure.Credentials.Attributes.IntegrationName("Mock")]
+        [Azure.Credentials.Attributes.IntegrationName(IntegrationName)]
         public static Task<TResult> InitializeAsync<TResult>(
             Func<IProvideAuthorization, TResult> onProvideAuthorization,
             Func<TResult> onProvideNothing,
@@ -30,9 +34,7 @@ namespace EastFive.Api.Tests
         {
             return onProvideAuthorization(new ProvideLoginMock()).ToTask();
         }
-
-        public CredentialValidationMethodTypes Method => method;
-
+        
         public Type CallbackController => typeof(ProvideLoginMock);
         
         public Task<TResult> RedeemTokenAsync<TResult>(
