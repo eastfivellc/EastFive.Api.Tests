@@ -280,12 +280,14 @@ namespace EastFive.Api.Tests
         public static Task<TResult> PostAsync<TResource, TResult>(this ITestApplication application,
                 TResource resource,
             Func<TResult> onCreated = default(Func<TResult>),
+            Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onExists = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<TResult> onNotImplemented = default(Func<TResult>))
         {
             application.CreatedResponse(onCreated);
+            application.CreatedBodyResponse(onCreatedBody);
             application.BadRequestResponse(onBadRequest);
             application.AlreadyExistsResponse(onExists);
             application.RefNotFoundTypeResponse(onRefDoesNotExistsType);
@@ -429,9 +431,23 @@ namespace EastFive.Api.Tests
                     EastFive.Api.Controllers.CreatedResponse created = () => new AttachedHttpResponseMessage<TResult>(onCreated());
                     return onSuccess(created);
                 });
-            
         }
-        
+
+        private static void CreatedBodyResponse<TResult>(this ITestApplication application,
+            Func<object, string, TResult> onCreated)
+        {
+            if (onCreated.IsDefaultOrNull())
+                return;
+            
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.CreatedBodyResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.CreatedBodyResponse created = (content, contentType) => new AttachedHttpResponseMessage<TResult>(onCreated(content, contentType));
+                    return onSuccess(created);
+                });
+        }
+
         private static void AlreadyExistsResponse<TResult>(this ITestApplication application,
             Func<TResult> onAlreadyExists)
         {
