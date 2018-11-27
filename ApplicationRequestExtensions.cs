@@ -69,6 +69,12 @@ namespace EastFive.Api.Tests
                     var stringValue = boolValue.ToString();
                     return onCasted(stringValue);
                 }
+                if (value is DateTime)
+                {
+                    var dateValue = (DateTime)value;
+                    var stringValue = dateValue.ToString();
+                    return onCasted(stringValue);
+                }
             }
 
             if(onNotMapped.IsDefaultOrNull())
@@ -185,12 +191,14 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
-            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
+            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
         {
             application.ContentResponse(onContent);
             application.MultipartContentResponse(onContents);
             application.BadRequestResponse(onBadRequest);
             application.RefNotFoundTypeResponse(onRefNotFoundType);
+            application.RedirectResponse(onRedirect);
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
                 (request) =>
                 {
@@ -218,14 +226,16 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
-            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
+            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
         {
             return application.GetAsync(new Expression<Action<TResource>>[] {  },
                 onContent: onContent,
                 onContents: onContents,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
-                onRefNotFoundType: onRefNotFoundType);
+                onRefNotFoundType: onRefNotFoundType,
+                onRedirect:onRedirect);
         }
 
 
@@ -235,14 +245,16 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
-            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
+            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
         {
             return application.GetAsync(new[] { param1 },
                 onContent: onContent,
                 onContents: onContents,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
-                onRefNotFoundType: onRefNotFoundType);
+                onRefNotFoundType: onRefNotFoundType,
+                onRedirect: onRedirect);
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
@@ -252,7 +264,8 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
-            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>))
+            Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
         {
             return application.GetAsync(
                     new Expression<Action<TResource>>[] { param1, param2 },
@@ -260,7 +273,8 @@ namespace EastFive.Api.Tests
                 onContents: onContents,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
-                onRefNotFoundType: onRefNotFoundType);
+                onRefNotFoundType: onRefNotFoundType,
+                onRedirect: onRedirect);
         }
 
         /// <summary>
@@ -280,15 +294,19 @@ namespace EastFive.Api.Tests
         public static Task<TResult> PostAsync<TResource, TResult>(this ITestApplication application,
                 TResource resource,
             Func<TResult> onCreated = default(Func<TResult>),
+            Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onExists = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
             Func<TResult> onNotImplemented = default(Func<TResult>))
         {
             application.CreatedResponse(onCreated);
+            application.CreatedBodyResponse(onCreatedBody);
             application.BadRequestResponse(onBadRequest);
             application.AlreadyExistsResponse(onExists);
             application.RefNotFoundTypeResponse(onRefDoesNotExistsType);
+            application.RedirectResponse(onRedirect);
 
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
                 (request) =>
@@ -429,7 +447,37 @@ namespace EastFive.Api.Tests
                     EastFive.Api.Controllers.CreatedResponse created = () => new AttachedHttpResponseMessage<TResult>(onCreated());
                     return onSuccess(created);
                 });
+        }
+
+        private static void CreatedBodyResponse<TResult>(this ITestApplication application,
+            Func<object, string, TResult> onCreated)
+        {
+            if (onCreated.IsDefaultOrNull())
+                return;
             
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.CreatedBodyResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.CreatedBodyResponse created = (content, contentType) => new AttachedHttpResponseMessage<TResult>(onCreated(content, contentType));
+                    return onSuccess(created);
+                });
+        }
+
+        private static void RedirectResponse<TResult>(this ITestApplication application,
+            Func<Uri, string, TResult> onRedirect)
+        {
+            if (onRedirect.IsDefaultOrNull())
+                return;
+
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.RedirectResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.RedirectResponse redirect = 
+                        (where, why) => new AttachedHttpResponseMessage<TResult>(onRedirect(where, why));
+                    return onSuccess(redirect);
+                });
         }
         
         private static void AlreadyExistsResponse<TResult>(this ITestApplication application,
