@@ -69,6 +69,12 @@ namespace EastFive.Api.Tests
                     var stringValue = boolValue.ToString();
                     return onCasted(stringValue);
                 }
+                if (value is DateTime)
+                {
+                    var dateValue = (DateTime)value;
+                    var stringValue = dateValue.ToString();
+                    return onCasted(stringValue);
+                }
             }
 
             if(onNotMapped.IsDefaultOrNull())
