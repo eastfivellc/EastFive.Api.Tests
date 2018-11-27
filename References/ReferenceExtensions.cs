@@ -14,6 +14,12 @@ namespace EastFive.Api.Tests
             return new TestRef<TType>(guid);
         }
 
+        public static IRef<TType> AsRef<TType>(this TType type)
+            where TType : struct, IReferenceable
+        {
+            return new TestRef<TType>(type.id);
+        }
+
         public static IRefs<TType> AsRefs<TType>(this Guid [] guids)
         {
             return new TestRefs<TType>(guids);
