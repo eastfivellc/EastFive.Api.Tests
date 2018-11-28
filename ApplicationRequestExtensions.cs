@@ -192,13 +192,15 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             application.ContentResponse(onContent);
             application.MultipartContentResponse(onContents);
             application.BadRequestResponse(onBadRequest);
             application.RefNotFoundTypeResponse(onRefNotFoundType);
             application.RedirectResponse(onRedirect);
+            application.HtmlResponse(onHtml);
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
                 (request) =>
                 {
@@ -227,7 +229,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.GetAsync(new Expression<Action<TResource>>[] {  },
                 onContent: onContent,
@@ -235,7 +238,8 @@ namespace EastFive.Api.Tests
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefNotFoundType: onRefNotFoundType,
-                onRedirect:onRedirect);
+                onRedirect:onRedirect,
+                onHtml: onHtml);
         }
 
 
@@ -246,7 +250,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.GetAsync(new[] { param1 },
                 onContent: onContent,
@@ -254,7 +259,8 @@ namespace EastFive.Api.Tests
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefNotFoundType: onRefNotFoundType,
-                onRedirect: onRedirect);
+                onRedirect: onRedirect,
+                onHtml: onHtml);
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
@@ -265,7 +271,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefNotFoundType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>))
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.GetAsync(
                     new Expression<Action<TResource>>[] { param1, param2 },
@@ -274,7 +281,8 @@ namespace EastFive.Api.Tests
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefNotFoundType: onRefNotFoundType,
-                onRedirect: onRedirect);
+                onRedirect: onRedirect,
+                onHtml: onHtml);
         }
 
         /// <summary>
@@ -378,8 +386,10 @@ namespace EastFive.Api.Tests
         private static void ContentResponse<TResource, TResult>(this ITestApplication application,
             Func<TResource, TResult> onContent)
         {
-            if (!onContent.IsDefaultOrNull())
-                application.SetInstigator(
+            if (onContent.IsDefaultOrNull())
+                return;
+
+            application.SetInstigator(
                     typeof(EastFive.Api.Controllers.ContentResponse),
                     (thisAgain, requestAgain, paramInfo, onSuccess) =>
                     {
@@ -394,6 +404,26 @@ namespace EastFive.Api.Tests
                             };
                         return onSuccess(created);
                     });
+        }
+
+        private static void HtmlResponse<TResult>(this ITestApplication application,
+            Func<string, TResult> onHtml)
+        {
+            if (onHtml.IsDefaultOrNull())
+                return;
+            
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.HtmlResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.HtmlResponse created =
+                    (content) =>
+                    {
+                        var result = onHtml(content);
+                        return new AttachedHttpResponseMessage<TResult>(result);
+                    };
+                    return onSuccess(created);
+                });
         }
 
         private static void BadRequestResponse<TResult>(this ITestApplication application,
