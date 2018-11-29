@@ -31,6 +31,8 @@ namespace EastFive.Api.Tests.Razor
                             return false;
                         if (d.Name.StartsWith("EastFive"))
                             return false;
+                        if (d.Name.StartsWith("Black"))
+                            return false;
                         return true;
                     })
                 .FullName;
