@@ -13,17 +13,19 @@ namespace EastFive.Api.Tests
     {
         public static void MockViewResponse(this HttpApplication session)
         {
-            session.SetInstigator(
-                typeof(EastFive.Api.Controllers.ViewRenderer),
-                (httpApp, request, paramInfo, success) =>
-                {
-                    EastFive.Api.Controllers.ViewRenderer dele =
-                    (filePath, content) =>
-                    {
-                        return "<html><head><title>TEST MOCK</title></head><body>Hello World</body></html>";
-                    };
-                    return success((object)dele);
-                });
+            //session.SetInstigator(
+            //    typeof(EastFive.Api.Controllers.ViewRenderer),
+            //    (httpApp, request, paramInfo, success) =>
+            //    {
+            //        EastFive.Api.Controllers.ViewRenderer dele =
+            //        (filePath, content) =>
+            //        {
+            //            return "<html><head><title>TEST MOCK</title></head><body>Hello World</body></html>";
+            //        };
+            //        return success((object)dele);
+            //    });
+
+
             session.AddOrUpdateInstantiation(
                 typeof(EastFive.Api.Controllers.ViewPathResolver),
                 (app) =>
