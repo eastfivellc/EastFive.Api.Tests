@@ -94,6 +94,7 @@
     <Compile Include="Sessions\TestSession.cs" />
     <Compile Include="Helpers\TestSessionHelpers.cs" />
     <Compile Include="Testing\AssertApi.cs" />
+    <Compile Include="TestSessionHelpers.cs" />
     <Compile Include="Tests\QueryParsingTests.cs" />
   </ItemGroup>
   <ItemGroup>

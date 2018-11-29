@@ -30,58 +30,7 @@ namespace EastFive.Api.Tests
 {
     public static class ApplicationRequestExtensions
     {
-        public static TResult CastResourceProperty<TResult>(this ITestApplication application, object value, Type propertyType,
-            Func<object, TResult> onCasted,
-            Func<TResult> onNotMapped = default(Func<TResult>))
-        {
-            var valueType = value.GetType();
-            if (propertyType.IsAssignableFrom(valueType))
-                return onCasted(value);
-
-            if (propertyType.IsAssignableFrom(typeof(BlackBarLabs.Api.Resources.WebId)))
-            {
-                if (value is Guid)
-                {
-                    var guidValue = (Guid)value;
-                    var webIdValue = (BlackBarLabs.Api.Resources.WebId)guidValue;
-                    return onCasted(webIdValue);
-                }
-            }
-
-            if (propertyType.IsAssignableFrom(typeof(string)))
-            {
-                if (value is Guid)
-                {
-                    var guidValue = (Guid)value;
-                    var stringValue = guidValue.ToString();
-                    return onCasted(stringValue);
-                }
-                if (value is BlackBarLabs.Api.Resources.WebId)
-                {
-                    var webIdValue = value as BlackBarLabs.Api.Resources.WebId;
-                    var guidValue = webIdValue.ToGuid().Value;
-                    var stringValue = guidValue.ToString();
-                    return onCasted(stringValue);
-                }
-                if (value is bool)
-                {
-                    var boolValue = (bool)value;
-                    var stringValue = boolValue.ToString();
-                    return onCasted(stringValue);
-                }
-                if (value is DateTime)
-                {
-                    var dateValue = (DateTime)value;
-                    var stringValue = dateValue.ToString();
-                    return onCasted(stringValue);
-                }
-            }
-
-            if(onNotMapped.IsDefaultOrNull())
-                throw new Exception($"Cannot create {propertyType.FullName} from {value.GetType().FullName}");
-            return onNotMapped();
-        }
-
+        
         private static HttpRequestMessage GetRequest(this ITestApplication application,
             HttpMethod method, FunctionViewControllerAttribute functionViewControllerAttribute)
         {
@@ -178,11 +127,6 @@ namespace EastFive.Api.Tests
                     Assert.Fail($"Type {typeof(TResource).FullName} does not have FunctionViewControllerAttribute");
                     throw new Exception();
                 });
-        }
-
-        public static void AssignQueryValue<T>(this T param, T value)
-        {
-
         }
 
         private static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
