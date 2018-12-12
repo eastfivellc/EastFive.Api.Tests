@@ -372,16 +372,16 @@ namespace BlackBarLabs.Api.Tests
         private HttpRequestMessage GetRequest<TController>(TController controller, HttpMethod method)
             where TController : ApiController
         {
-            var hostingLocation = Microsoft.Azure.CloudConfigurationManager.GetSetting("BlackBarLabs.Api.Tests.ServerUrl");
+            var hostingLocation = Microsoft.Azure.CloudConfigurationManager.GetSetting(EastFive.Api.Tests.AppSettings.ServerUrl);
             if (String.IsNullOrWhiteSpace(hostingLocation))
                 hostingLocation = "http://example.com";
             var httpRequest = new HttpRequestMessage(method, hostingLocation);
             var config = new HttpConfiguration();
 
-            var routesApi = Microsoft.Azure.CloudConfigurationManager.GetSetting("BlackBarLabs.Api.Tests.RoutesApi");
+            var routesApi = Microsoft.Azure.CloudConfigurationManager.GetSetting(EastFive.Api.Tests.AppSettings.RoutesApi);
             if (String.IsNullOrWhiteSpace(routesApi))
                 routesApi = "DefaultApi";
-            var routesMvc = Microsoft.Azure.CloudConfigurationManager.GetSetting("BlackBarLabs.Api.Tests.RoutesMvc");
+            var routesMvc = Microsoft.Azure.CloudConfigurationManager.GetSetting(EastFive.Api.Tests.AppSettings.RoutesMvc);
             if (String.IsNullOrWhiteSpace(routesMvc))
                 routesMvc = "Default";
 

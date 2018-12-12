@@ -259,6 +259,7 @@ namespace EastFive.Api.Tests
             application.AlreadyExistsResponse(onExists);
             application.RefNotFoundTypeResponse(onRefDoesNotExistsType);
             application.RedirectResponse(onRedirect);
+            application.NotImplementedResponse(onNotImplemented);
 
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
                 (request) =>
