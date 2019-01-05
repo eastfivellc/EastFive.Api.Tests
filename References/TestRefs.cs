@@ -17,6 +17,8 @@ namespace EastFive.Api.Tests
                 return true;
             if (objectType.IsSubClassOfGeneric(typeof(TestRefs<>)))
                 return true;
+            if (objectType.IsSubClassOfGeneric(typeof(TestRefOptional<>)))
+                return true;
             if (objectType.IsSubClassOfGeneric(typeof(IDictionary<,>)))
                 return true;
             if (objectType.IsSubclassOf(typeof(Type)))
@@ -48,6 +50,11 @@ namespace EastFive.Api.Tests
                         })
                     .ToArray();
                 writer.WriteEndArray();
+            }
+            if (value is IReferenceableOptional)
+            {
+                var id = (value as IReferenceableOptional).id;
+                writer.WriteValue(id);
             }
             if (value.GetType().IsSubClassOfGeneric(typeof(IDictionary<,>)))
             {
@@ -112,5 +119,31 @@ namespace EastFive.Api.Tests
         }
 
         public IEnumerableAsync<TType> Values => throw new NotImplementedException();
+    }
+
+    public class TestRefOptional<TType> : IRefOptional<TType>
+        where TType : struct
+    {
+        public TestRefOptional(Guid? id)
+        {
+            this.id = id;
+        }
+
+        public Guid? id
+        {
+            get;
+            private set;
+        }
+
+        public TType? value => throw new NotImplementedException();
+
+        public bool resolved => false;
+
+        public bool HasValue => this.id.HasValue;
+
+        public Task ResolveAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

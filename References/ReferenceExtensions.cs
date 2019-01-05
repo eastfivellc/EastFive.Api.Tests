@@ -24,5 +24,11 @@ namespace EastFive.Api.Tests
         {
             return new TestRefs<TType>(guids);
         }
+
+        public static IRefOptional<TType> AsRefOptional<TType>(this Guid? guid)
+            where TType : struct
+        {
+            return new TestRefOptional<TType>(guid);
+        }
     }
 }
