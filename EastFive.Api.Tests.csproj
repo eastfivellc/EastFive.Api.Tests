@@ -117,10 +117,6 @@
       <Project>{aec927ef-6aae-4533-bbf6-539643684002}</Project>
       <Name>EastFive.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)\BlackBarLabs.Security\BlackBarLabs.Security.csproj">
-      <Project>{17a2e027-c32a-41db-9b46-5222d55c0e26}</Project>
-      <Name>BlackBarLabs.Security</Name>
-    </ProjectReference>
     <ProjectReference Include="$(SolutionDir)\BlackBarLabs.SendGrid\BlackBarLabs.SendGrid\BlackBarLabs.SendGrid.csproj">
       <Project>{c6e444da-3991-43e3-a6c8-56db53670970}</Project>
       <Name>BlackBarLabs.SendGrid</Name>
