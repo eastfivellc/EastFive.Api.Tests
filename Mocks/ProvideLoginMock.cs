@@ -8,6 +8,7 @@ using EastFive.Security.SessionServer;
 using System.Net.Http;
 using System.Security.Claims;
 using EastFive.Api.Azure.Credentials;
+using EastFive.Serialization;
 
 namespace EastFive.Api.Tests
 {
@@ -17,6 +18,7 @@ namespace EastFive.Api.Tests
     {
         public const string IntegrationName = "Mock";
         public string Method => IntegrationName;
+        public Guid Id => System.Text.Encoding.UTF8.GetBytes(Method).MD5HashGuid();
 
 
         private Dictionary<string, string> credentials = new Dictionary<string, string>();

@@ -17,7 +17,7 @@ namespace EastFive.Api.Tests
                 return true;
             if (objectType.IsSubClassOfGeneric(typeof(TestRefs<>)))
                 return true;
-            if (objectType.IsSubClassOfGeneric(typeof(TestRefOptional<>)))
+            if (objectType.IsSubClassOfGeneric(typeof(IRefOptional<>)))
                 return true;
             if (objectType.IsSubClassOfGeneric(typeof(IDictionary<,>)))
                 return true;
@@ -106,6 +106,7 @@ namespace EastFive.Api.Tests
     }
 
     public class TestRefs<TType> : IRefs<TType>
+        where TType : struct
     {
         public TestRefs(Guid[] ids)
         {
@@ -119,6 +120,14 @@ namespace EastFive.Api.Tests
         }
 
         public IEnumerableAsync<TType> Values => throw new NotImplementedException();
+
+        public IRef<TType>[] refs
+        {
+            get
+            {
+                return ids.Select(id => new TestRef<TType>(id)).ToArray();
+            }
+        }
     }
 
     public class TestRefOptional<TType> : IRefOptional<TType>
