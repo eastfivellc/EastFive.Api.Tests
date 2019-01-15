@@ -187,6 +187,7 @@ namespace EastFive.Api.Tests
 
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
@@ -213,6 +214,8 @@ namespace EastFive.Api.Tests
 
             application.ContentResponse(onContent);
             application.MultipartContentResponse(onContents);
+            if(!onContentObjects.IsDefaultOrNull())
+                application.MultipartContentObjectResponse<TResource, TResult>(onContentObjects);
             application.NotFoundResponse<TResource, TResult>(onNotFound);
             application.HtmlResponse<TResource, TResult>(onHtml);
 
@@ -286,6 +289,7 @@ namespace EastFive.Api.Tests
                 Expression<Action<TResource>>[] parameters,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
@@ -317,6 +321,7 @@ namespace EastFive.Api.Tests
                 },
                 onContent: onContent,
                 onContents: onContents,
+                onContentObjects: onContentObjects,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
@@ -328,6 +333,7 @@ namespace EastFive.Api.Tests
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
@@ -337,6 +343,7 @@ namespace EastFive.Api.Tests
             return application.GetAsync(new Expression<Action<TResource>>[] {  },
                 onContent: onContent,
                 onContents: onContents,
+                onContentObjects: onContentObjects,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
@@ -349,6 +356,7 @@ namespace EastFive.Api.Tests
                 Expression<Action<TResource>> param1,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
@@ -358,6 +366,7 @@ namespace EastFive.Api.Tests
             return application.GetAsync(new[] { param1 },
                 onContent: onContent,
                 onContents: onContents,
+                onContentObjects: onContentObjects,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
@@ -370,6 +379,7 @@ namespace EastFive.Api.Tests
                 Expression<Action<TResource>> param2,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
@@ -380,6 +390,7 @@ namespace EastFive.Api.Tests
                     new Expression<Action<TResource>>[] { param1, param2 },
                 onContent: onContent,
                 onContents: onContents,
+                onContentObjects: onContentObjects,
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
@@ -803,8 +814,49 @@ namespace EastFive.Api.Tests
                 typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
                 (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    var scope = new CallbackWrapper<TResource, TResult>(onContents, thisAgain, requestAgain, paramInfo, onSuccess);
+                    var scope = new CallbackWrapper<TResource, TResult>(onContents, null, thisAgain, requestAgain, paramInfo, onSuccess);
                     var multipartResponseMethodInfoGeneric = typeof(CallbackWrapper<TResource, TResult>).GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Instance);
+                    var multipartResponseMethodInfoBound = multipartResponseMethodInfoGeneric; // multipartResponseMethodInfoGeneric.MakeGenericMethod(type.GenericTypeArguments);
+                    var dele = Delegate.CreateDelegate(type, scope, multipartResponseMethodInfoBound);
+                    return onSuccess((object)dele);
+                });
+        }
+
+        private static void MultipartContentObjectResponse<TResource, TResult>(this ITestApplication application,
+            Func<object[], TResult> onContents)
+        {
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync created =
+                        (contents) =>
+                        {
+                            var resources = contents.ToArray();
+                            // TODO: try catch
+                            //if (!(content is TResource))
+                            //    Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
+
+                            if (onContents.IsDefaultOrNull())
+                                return FailureToOverride<TResource>(
+                                    typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
+                                    thisAgain, requestAgain, paramInfo, onSuccess).AsTask();
+                            var result = onContents(resources);
+                            return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
+                        };
+                    return onSuccess(created);
+                });
+
+            application.SetInstigatorGeneric(
+                typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
+                (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    var callbackWrapperInstance = typeof(CallbackWrapper<,>).MakeGenericType(
+                        new Type[] { type.GenericTypeArguments.First(), typeof(TResult) });
+                    //var scope = new CallbackWrapper<TResource, TResult>(null, onContents, thisAgain, requestAgain, paramInfo, onSuccess);
+                    var scope = Activator.CreateInstance(callbackWrapperInstance, 
+                        new object[] { null, onContents, thisAgain, requestAgain, paramInfo, onSuccess });
+                    var multipartResponseMethodInfoGeneric = callbackWrapperInstance.GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Instance);
                     var multipartResponseMethodInfoBound = multipartResponseMethodInfoGeneric; // multipartResponseMethodInfoGeneric.MakeGenericMethod(type.GenericTypeArguments);
                     var dele = Delegate.CreateDelegate(type, scope, multipartResponseMethodInfoBound);
                     return onSuccess((object)dele);
@@ -814,14 +866,18 @@ namespace EastFive.Api.Tests
         public class CallbackWrapper<TResource, TResult>
         {
             private Func<TResource[], TResult> callback;
+            private Func<object[], TResult> callbackObjs;
             private HttpApplication thisAgain;
             private HttpRequestMessage requestAgain;
             private ParameterInfo paramInfo;
             private Func<object, Task<HttpResponseMessage>> onSuccess;
             
-            public CallbackWrapper(Func<TResource[], TResult> onContents, HttpApplication thisAgain, HttpRequestMessage requestAgain, ParameterInfo paramInfo, Func<object, Task<HttpResponseMessage>> onSuccess)
+            public CallbackWrapper(Func<TResource[], TResult> onContents, Func<object[], TResult> callbackObjs,
+                HttpApplication thisAgain, HttpRequestMessage requestAgain, ParameterInfo paramInfo,
+                Func<object, Task<HttpResponseMessage>> onSuccess)
             {
                 this.callback = onContents;
+                this.callbackObjs = callbackObjs;
                 this.thisAgain = thisAgain;
                 this.requestAgain = requestAgain;
                 this.paramInfo = paramInfo;
@@ -838,7 +894,8 @@ namespace EastFive.Api.Tests
             }
             
         }
-        
+
+
         private static void NoContentResponse<TResource, TResult>(this ITestApplication application,
             Func<TResult> onNoContent)
         {

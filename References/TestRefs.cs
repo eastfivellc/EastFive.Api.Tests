@@ -144,6 +144,16 @@ namespace EastFive.Api.Tests
             private set;
         }
 
+        public IRef<TType> Ref
+        {
+            get
+            {
+                if (!this.HasValue)
+                    throw new Exception("Attempt to de-option empty value");
+                return new TestRef<TType>(this.id.Value);
+            }
+        }
+
         public TType? value => throw new NotImplementedException();
 
         public bool resolved => false;
