@@ -82,12 +82,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationRequestExtensions.cs" />
+    <Compile Include="Applications\RestApplicationFactory.cs" />
     <Compile Include="AppSettings.cs" />
     <Compile Include="AssertExtensions.cs" />
     <Compile Include="Examples\ActorController.cs" />
     <Compile Include="Examples\ExampleQuery.cs" />
     <Compile Include="Helpers\HttpActionHelpers.cs" />
-    <Compile Include="ITestApplication.cs" />
+    <Compile Include="Applications\ITestApplication.cs" />
+    <Compile Include="Applications\ITestApplicationFactory.cs" />
     <Compile Include="Login\IProvideTestCredentials.cs" />
     <Compile Include="Mocks\MockMailService.cs" />
     <Compile Include="Mocks\MockPrincipal.cs" />
@@ -97,6 +99,7 @@
     <Compile Include="Razor\TestTemplateManager.cs" />
     <Compile Include="References\ReferenceExtensions.cs" />
     <Compile Include="References\TestRefs.cs" />
+    <Compile Include="Applications\RestTestApplication.cs" />
     <Compile Include="Sessions\ITestSession.cs" />
     <Compile Include="Sessions\TestSession.cs" />
     <Compile Include="Helpers\TestSessionHelpers.cs" />

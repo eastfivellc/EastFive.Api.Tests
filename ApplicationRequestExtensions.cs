@@ -104,7 +104,7 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
-            Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
+            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
@@ -141,7 +141,7 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
-            Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
+            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
@@ -190,7 +190,7 @@ namespace EastFive.Api.Tests
             Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
-            Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
+            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
@@ -202,7 +202,8 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<string, TResult> onFailure = default(Func<string, TResult>),
 
-            Func<TResult> onNotImplemented = default(Func<TResult>))
+            Func<TResult> onNotImplemented = default(Func<TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             application.CreatedResponse<TResource, TResult>(onCreated);
             application.CreatedBodyResponse<TResource, TResult>(onCreatedBody);
@@ -222,6 +223,7 @@ namespace EastFive.Api.Tests
             application.NoContentResponse<TResource, TResult>(onUpdated);
             application.UnauthorizedResponse<TResource, TResult>(onUnauthorized);
             application.GeneralConflictResponse<TResource, TResult>(onFailure);
+            application.ExecuteBackgroundResponse<TResource, TResult>(onExecuteBackground);
 
             return application.MethodAsync<TResource, TResultInner, TResult>(method,
                 requestMutation,
@@ -238,13 +240,14 @@ namespace EastFive.Api.Tests
                 {
                     var requestGeneric = application.GetRequest(method, fvcAttr);
                     var request = requestMutation(requestGeneric);
-                    
-                    var response = await EastFive.Api.Modules.ControllerHandler.DirectSendAsync(application as EastFive.Api.HttpApplication, request, default(CancellationToken),
-                        (requestBack, token) =>
-                        {
-                            Assert.Fail($"Failed to invoke {fvcAttr.Route}");
-                            throw new Exception();
-                        });
+
+                    var response = await application.SendAsync(request);
+                    //var response = await EastFive.Api.Modules.ControllerHandler.DirectSendAsync(application as EastFive.Api.HttpApplication, request, default(CancellationToken),
+                    //    (requestBack, token) =>
+                    //    {
+                    //        Assert.Fail($"Failed to invoke {fvcAttr.Route}");
+                    //        throw new Exception();
+                    //    });
 
                     if(response is IDidNotOverride)
                     {
@@ -415,12 +418,13 @@ namespace EastFive.Api.Tests
         public static Task<TResult> PostAsync<TResource, TResult>(this ITestApplication application,
                 TResource resource,
             Func<TResult> onCreated = default(Func<TResult>),
-            Func<object, string, TResult> onCreatedBody = default(Func<object, string, TResult>),
+            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onExists = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<TResult> onNotImplemented = default(Func<TResult>))
+            Func<TResult> onNotImplemented = default(Func<TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
                 (request) =>
@@ -440,7 +444,8 @@ namespace EastFive.Api.Tests
                 onExists: onExists,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onNotImplemented: onNotImplemented);
+                onNotImplemented: onNotImplemented,
+                onExecuteBackground: onExecuteBackground);
         }
 
         private static Task<TResult> DeleteAsync<TResource, TResult>(this ITestApplication application,
@@ -496,6 +501,27 @@ namespace EastFive.Api.Tests
                 onHtml: onHtml);
         }
 
+        public static Task<TResult> DeleteAsync<TResource, TResult>(this ITestApplication application,
+            Func<TResult> onNoContent = default(Func<TResult>),
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>))
+        {
+            return application.DeleteAsync(new Expression<Action<TResource>>[] { },
+                onNoContent: onNoContent,
+                onContent: onContent,
+                onContents: onContents,
+                onBadRequest: onBadRequest,
+                onNotFound: onNotFound,
+                onRefDoesNotExistsType: onRefDoesNotExistsType,
+                onRedirect: onRedirect,
+                onHtml: onHtml);
+        }
+
         public static Task<TResult> PatchAsync<TResource, TResult>(this ITestApplication application,
                 TResource resource,
             Func<TResult> onUpdated = default(Func<TResult>),
@@ -522,7 +548,7 @@ namespace EastFive.Api.Tests
         
         #region Response types
 
-        private interface IReturnResult
+        public interface IReturnResult
         {
             TResult GetResultCasted<TResult>();
         }
@@ -589,7 +615,8 @@ namespace EastFive.Api.Tests
                             return new AttachedHttpResponseMessage<TResult>(result);
                         };
                     return onSuccess(created);
-                });
+                },
+                onContent.IsDefaultOrNull());
         }
 
         private static void HtmlResponse<TResource, TResult>(this ITestApplication application,
@@ -645,7 +672,8 @@ namespace EastFive.Api.Tests
                         .MakeGenericMethod(type.GenericTypeArguments);
                     var dele = Delegate.CreateDelegate(type, scope, multipartResponseMethodInfoBound);
                     return onSuccess((object)dele);
-                });
+                },
+                referencedDocDoesNotExists.IsDefaultOrNull());
         }
 
         public class CallbackWrapperReferencedDocumentDoesNotExistsResponse<TResult>
@@ -681,7 +709,79 @@ namespace EastFive.Api.Tests
 
         }
 
+        private class InstigatorGenericWrapper1<TCallback, TResult, TResource>
+        {
+            private Type type;
+            private HttpApplication httpApp;
+            private HttpRequestMessage request;
+            private ParameterInfo paramInfo;
+            private TCallback callback;
+            private Func<object, Task<HttpResponseMessage>> onSuccess;
 
+            public InstigatorGenericWrapper1(Type type,
+                HttpApplication httpApp, HttpRequestMessage request, ParameterInfo paramInfo,
+                TCallback callback, Func<object, Task<HttpResponseMessage>> onSuccess)
+            {
+                this.type = type;
+                this.httpApp = httpApp;
+                this.request = request;
+                this.paramInfo = paramInfo;
+                this.callback = callback;
+                this.onSuccess = onSuccess;
+            }
+
+            HttpResponseMessage ContentTypeResponse(object content, string mediaType = default(string))
+            {
+                if (callback.IsDefault())
+                    return FailureToOverride<TResource>(
+                        type, this.httpApp, this.request, this.paramInfo, onSuccess);
+                var contentObj = (object)content;
+                var contentType = (TResource)contentObj;
+                var callbackObj = (object)callback;
+                var callbackDelegate = (Delegate)callbackObj;
+                var resultObj = callbackDelegate.DynamicInvoke(contentType, mediaType);
+                var result = (TResult)resultObj;
+                return new AttachedHttpResponseMessage<TResult>(result);
+            }
+
+            HttpResponseMessage CreatedBodyResponse(object content, string mediaType = default(string))
+            {
+                if (callback.IsDefault())
+                    return FailureToOverride<TResource>(
+                        type, this.httpApp, this.request, this.paramInfo, onSuccess);
+                var contentObj = (object)content;
+                var contentType = (TResource)contentObj;
+                var callbackObj = (object)callback;
+                var callbackDelegate = (Delegate)callbackObj;
+                var resultObj = callbackDelegate.DynamicInvoke(contentType, mediaType);
+                var result = (TResult)resultObj;
+                return new AttachedHttpResponseMessage<TResult>(result);
+            }
+        }
+
+        private static void CreatedBodyResponse<TResource, TResult>(this ITestApplication application,
+            Func<TResource, string, TResult> onCreated)
+        {
+            application.SetInstigatorGeneric(
+                typeof(EastFive.Api.Controllers.CreatedBodyResponse<>),
+                (type, httpApp, request, paramInfo, onSuccess) =>
+                {
+                    type = typeof(CreatedBodyResponse<>).MakeGenericType(typeof(TResource));
+                    var wrapperConcreteType = typeof(InstigatorGenericWrapper1<,,>).MakeGenericType(
+                        //type.GenericTypeArguments
+                        //    .Append(typeof(Func<TResource, string, TResult>))
+                        typeof(Func<TResource, string, TResult>)
+                            .AsArray()
+                            .Append(typeof(TResult))
+                            .Append(typeof(TResource))
+                            .ToArray());
+                    var wrapperInstance = Activator.CreateInstance(wrapperConcreteType,
+                        new object[] { type, httpApp, request, paramInfo, onCreated, onSuccess });
+                    var dele = Delegate.CreateDelegate(type, wrapperInstance, "CreatedBodyResponse", false);
+                    return onSuccess(dele);
+                },
+                onCreated.IsDefaultOrNull());
+        }
 
         private static void CreatedResponse<TResource, TResult>(this ITestApplication application,
             Func<TResult> onCreated)
@@ -700,27 +800,8 @@ namespace EastFive.Api.Tests
                             return new AttachedHttpResponseMessage<TResult>(onCreated());
                         };
                     return onSuccess(created);
-                });
-        }
-
-        private static void CreatedBodyResponse<TResource, TResult>(this ITestApplication application,
-            Func<object, string, TResult> onCreated)
-        {
-            application.SetInstigator(
-                typeof(EastFive.Api.Controllers.CreatedBodyResponse),
-                (thisAgain, requestAgain, paramInfo, onSuccess) =>
-                {
-                    EastFive.Api.Controllers.CreatedBodyResponse created = 
-                        (content, contentType) =>
-                        {
-                            if (onCreated.IsDefaultOrNull())
-                                return FailureToOverride<TResource>(
-                                    typeof(EastFive.Api.Controllers.CreatedBodyResponse),
-                                    thisAgain, requestAgain, paramInfo, onSuccess);
-                            return new AttachedHttpResponseMessage<TResult>(onCreated(content, contentType));
-                        };
-                    return onSuccess(created);
-                });
+                },
+                onCreated.IsDefaultOrNull());
         }
 
         private static void RedirectResponse<TResource, TResult>(this ITestApplication application,
@@ -886,11 +967,20 @@ namespace EastFive.Api.Tests
 
             public async Task<HttpResponseMessage> MultipartResponseAsyncGeneric(IEnumerableAsync<TResource> resources)
             {
-                if (callback.IsDefaultOrNull())
-                    return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.MultipartResponseAsync<>), thisAgain, requestAgain, paramInfo, onSuccess);
-                var resourcesArray = await resources.ToArrayAsync();
-                var result = callback(resourcesArray);
-                return new AttachedHttpResponseMessage<TResult>(result);
+                if (!callback.IsDefaultOrNull())
+                {
+                    var resourcesArray = await resources.ToArrayAsync();
+                    var result = callback(resourcesArray);
+                    return new AttachedHttpResponseMessage<TResult>(result);
+                }
+                if (!callbackObjs.IsDefaultOrNull())
+                {
+                    var resourcesArray = await resources.ToArrayAsync();
+                    var result = callbackObjs(resourcesArray.Cast<object>().ToArray());
+                    return new AttachedHttpResponseMessage<TResult>(result);
+                }
+                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.MultipartResponseAsync<>), 
+                    thisAgain, requestAgain, paramInfo, onSuccess);
             }
             
         }
@@ -971,7 +1061,27 @@ namespace EastFive.Api.Tests
                     return onSuccess(created);
                });
         }
-        
+
+        private static void ExecuteBackgroundResponse<TResource, TResult>(this ITestApplication application,
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackgroundResponse)
+        {
+            application.SetInstigator(
+                typeof(ExecuteBackgroundResponseAsync),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    ExecuteBackgroundResponseAsync created =
+                        async (executionContent) =>
+                        {
+                            if (onExecuteBackgroundResponse.IsDefaultOrNull())
+                                return FailureToOverride<TResource>(typeof(ExecuteBackgroundResponseAsync), thisAgain, requestAgain, paramInfo, onSuccess);
+                            var result = await onExecuteBackgroundResponse(executionContent);
+                            return new AttachedHttpResponseMessage<TResult>(result);
+                        };
+                    return onSuccess(created);
+                });
+        }
+
+
         private static HttpResponseMessage FailureToOverride<TResource>(Type typeOfResponse,
             HttpApplication application,
             HttpRequestMessage request, ParameterInfo paramInfo,
@@ -981,40 +1091,6 @@ namespace EastFive.Api.Tests
         }
 
         #region Depricated
-
-        private static EastFive.Api.Controllers.CreatedResponse CreatedResponse<TResource, TResult>(Func<TResource, TResult> onCreated, TResource resource, HttpRequestMessage request)
-        {
-            return () =>
-            {
-                var result = onCreated(resource);
-                var attached = new AttachedHttpResponseMessage<TResult>(
-                    result,
-                    request.CreateResponse(System.Net.HttpStatusCode.Created));
-                return attached;
-            };
-        }
-
-        private static EastFive.Api.Controllers.BadRequestResponse BadRequestResponse<TResult>(Func<TResult> onBadRequest, HttpRequestMessage request)
-        {
-            return () => new AttachedHttpResponseMessage<TResult>(
-                    onBadRequest(),
-                    request.CreateResponse(System.Net.HttpStatusCode.BadRequest));
-        }
-
-        private static EastFive.Api.Controllers.AlreadyExistsResponse AlreadyExistsResponse<TResult>(this Func<TResult> onAlreadyExists, HttpRequestMessage request)
-        {
-            return () => new AttachedHttpResponseMessage<TResult>(
-                    onAlreadyExists(),
-                    request.CreateResponse(System.Net.HttpStatusCode.Conflict));
-        }
-
-        private static EastFive.Api.Controllers.ReferencedDocumentDoesNotExistsResponse<TRef> ReferencedDocumentDoesNotExistsResponse<TRef, TResult>(
-            this Func<TResult> onReferenedDoesNotExists, HttpRequestMessage request)
-        {
-            return () => new AttachedHttpResponseMessage<TResult>(
-                    onReferenedDoesNotExists(),
-                    request.CreateResponse(System.Net.HttpStatusCode.BadRequest));
-        }
 
         private static EastFive.Api.Controllers.ContentResponse ContentResponse<TResource, TResult>(this Func<HttpResponseMessage, TResource, TResult> onContent, HttpRequestMessage request)
             where TResource : class
@@ -1196,36 +1272,6 @@ namespace EastFive.Api.Tests
                 (request, context) => operation(
                         context,
                         onCreated.CreatedResponse(request)));
-        }
-
-
-        [Obsolete]
-        public static Task<TResult> GetMultipartSpecifiedAsync<TResource, TResult>(this ITestApplication application,
-                Func<RequestContext,
-                    EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync,
-                    Task<HttpResponseMessage>> operation,
-                Func<HttpResponseMessage, TResource[], TResult> onResponse)
-        {
-            return application.GetRequestContext<TResult>(HttpMethod.Get,
-                (request, context) => operation(context, onResponse.MultipartAcceptArrayResponseAsync(request)));
-        }
-
-
-        [Obsolete]
-        public static Task<TResult> GetByIdAsync<TResource, TApplication, TResult>(this ITestApplication application,
-                Func<RequestContext,
-                    Controllers.ContentResponse,
-                    Controllers.NotFoundResponse,
-                    Task<HttpResponseMessage>> operation,
-                Func<HttpResponseMessage, TResource, TResult> onResponse,
-                Func<HttpResponseMessage, TResult> onNotFound)
-            where TApplication : EastFive.Api.Azure.AzureApplication
-            where TResource : class
-        {
-            return application.GetRequestContext<TResult>(HttpMethod.Get,
-                (request, context) => operation(context,
-                    onResponse.ContentResponse(request),
-                    onNotFound.NotFoundResponse(request)));
         }
 
 
