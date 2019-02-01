@@ -136,6 +136,42 @@ namespace EastFive.Api.Tests
 
         public static Task<TResult> ActionAsync<TResource, TResult>(this ITestApplication application,
                 string action,
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
+            Func<TResult> onUpdated = default(Func<TResult>),
+
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onUnauthorized = default(Func<TResult>),
+            Func<TResult> onExists = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<string, TResult> onFailure = default(Func<string, TResult>),
+
+            Func<TResult> onNotImplemented = default(Func<TResult>))
+        {
+            return application.ActionAsync<TResource, TResult>(action,
+                    new Expression<Action<TResource>>[] { },
+                onContent: onContent,
+                onContents: onContents,
+                onHtml: onHtml,
+                onCreated: onCreated,
+                onCreatedBody: onCreatedBody,
+                onUpdated: onUpdated,
+                onRedirect: onRedirect,
+                onBadRequest: onBadRequest,
+                onNotFound: onNotFound,
+                onRefDoesNotExistsType: onRefDoesNotExistsType,
+                onFailure: onFailure,
+                onNotImplemented: onNotImplemented);
+        }
+
+        public static Task<TResult> ActionAsync<TResource, TResult>(this ITestApplication application,
+                string action,
                 Expression<Action<TResource>> [] paramSet,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
