@@ -15,6 +15,12 @@ namespace EastFive.Api.Tests
             return new TestRef<TType>(guid);
         }
 
+        public static IRefObj<TType> AsRefObj<TType>(this Guid guid)
+            where TType : class
+        {
+            return new TestRefObj<TType>(guid);
+        }
+
         public static IRef<TType> AsRef<TType>(this TType type)
             where TType : struct, IReferenceable
         {
@@ -43,6 +49,18 @@ namespace EastFive.Api.Tests
             where TType : struct, IReferenceable
         {
             return type.id.AsRefOptional<TType>();
+        }
+
+        public static IRefObjOptional<TType> AsRefObjOptional<TType>(this Guid guid)
+            where TType : class
+        {
+            return guid.AsOptional().AsRefObjOptional<TType>();
+        }
+
+        public static IRefObjOptional<TType> AsRefObjOptional<TType>(this Guid? guid)
+            where TType : class
+        {
+            return new TestRefObjOptional<TType>(guid);
         }
     }
 }

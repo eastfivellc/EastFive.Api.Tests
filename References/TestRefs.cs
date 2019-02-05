@@ -189,6 +189,30 @@ namespace EastFive.Api.Tests
         }
     }
 
+    public class TestRefObj<TType> : IRefObj<TType>
+        where TType : class
+    {
+        public TestRefObj(Guid id)
+        {
+            this.id = id;
+        }
+
+        public Guid id
+        {
+            get;
+            private set;
+        }
+
+        public bool resolved => false;
+
+        Func<TType> IRefObj<TType>.value => throw new NotImplementedException();
+
+        public Task ResolveAsync()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class TestRefs<TType> : IRefs<TType>
         where TType : struct
     {
@@ -243,6 +267,42 @@ namespace EastFive.Api.Tests
         public bool resolved => false;
 
         public bool HasValue => this.id.HasValue;
+
+        public Task ResolveAsync()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class TestRefObjOptional<TType> : IRefObjOptional<TType>
+        where TType : class
+    {
+        public TestRefObjOptional(Guid? id)
+        {
+            this.id = id;
+        }
+
+        public Guid? id
+        {
+            get;
+            private set;
+        }
+
+        public IRefObj<TType> Ref
+        {
+            get
+            {
+                if (!this.HasValue)
+                    throw new Exception("Attempt to de-option empty value");
+                return new TestRefObj<TType>(this.id.Value);
+            }
+        }
+
+        public bool resolved => false;
+
+        public bool HasValue => this.id.HasValue;
+
+        TType IRefObjOptional<TType>.value => throw new NotImplementedException();
 
         public Task ResolveAsync()
         {
