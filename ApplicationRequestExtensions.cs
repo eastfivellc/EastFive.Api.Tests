@@ -250,6 +250,7 @@ namespace EastFive.Api.Tests
             application.NotImplementedResponse<TResource, TResult>(onNotImplemented);
 
             application.ContentResponse(onContent);
+            application.ContentTypeResponse<TResource, TResult>((body, contentType) => onContent(body));
             application.MultipartContentResponse(onContents);
             if(!onContentObjects.IsDefaultOrNull())
                 application.MultipartContentObjectResponse<TResource, TResult>(onContentObjects);
@@ -814,6 +815,28 @@ namespace EastFive.Api.Tests
                     var wrapperInstance = Activator.CreateInstance(wrapperConcreteType,
                         new object[] { type, httpApp, request, paramInfo, onCreated, onSuccess });
                     var dele = Delegate.CreateDelegate(type, wrapperInstance, "CreatedBodyResponse", false);
+                    return onSuccess(dele);
+                },
+                onCreated.IsDefaultOrNull());
+        }
+
+        private static void ContentTypeResponse<TResource, TResult>(this ITestApplication application,
+            Func<TResource, string, TResult> onCreated)
+        {
+            application.SetInstigatorGeneric(
+                typeof(EastFive.Api.Controllers.ContentTypeResponse<>),
+                (type, httpApp, request, paramInfo, onSuccess) =>
+                {
+                    type = typeof(ContentTypeResponse<>).MakeGenericType(typeof(TResource));
+                    var wrapperConcreteType = typeof(InstigatorGenericWrapper1<,,>).MakeGenericType(
+                        typeof(Func<TResource, string, TResult>)
+                            .AsArray()
+                            .Append(typeof(TResult))
+                            .Append(typeof(TResource))
+                            .ToArray());
+                    var wrapperInstance = Activator.CreateInstance(wrapperConcreteType,
+                        new object[] { type, httpApp, request, paramInfo, onCreated, onSuccess });
+                    var dele = Delegate.CreateDelegate(type, wrapperInstance, "ContentTypeResponse", false);
                     return onSuccess(dele);
                 },
                 onCreated.IsDefaultOrNull());
