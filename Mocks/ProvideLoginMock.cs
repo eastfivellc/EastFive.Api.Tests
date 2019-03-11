@@ -171,5 +171,24 @@ namespace EastFive.Api.Tests
                 new Dictionary<string, Type>() { { "push_pmp_file_to_ehr", typeof(bool) } },
                 new Dictionary<string, string>() { { "push_pmp_file_to_ehr", "When true, the system will push PMP files into the provider's clinical documents in their EHR system." } }).ToTask();
         }
+
+        public static Redirection GetResponse(string userIdProvider)
+        {
+            var token = ProvideLoginMock.GetToken(userIdProvider);
+            return new Redirection()
+            {
+
+            };
+        }
+
+        public static IDictionary<string, string> GetParameters(string externalSystemUserId)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class Redirection : EastFive.Azure.Auth.Redirection
+    {
+
     }
 }
