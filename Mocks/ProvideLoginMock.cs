@@ -9,6 +9,11 @@ using System.Net.Http;
 using System.Security.Claims;
 using EastFive.Api.Azure.Credentials;
 using EastFive.Serialization;
+using EastFive.Api.Azure;
+using EastFive.Api.Controllers;
+using System.Web.Http.Routing;
+using BlackBarLabs.Api;
+using Newtonsoft.Json;
 
 namespace EastFive.Api.Tests
 {
@@ -19,7 +24,6 @@ namespace EastFive.Api.Tests
         public const string IntegrationName = "Mock";
         public string Method => IntegrationName;
         public Guid Id => System.Text.Encoding.UTF8.GetBytes(Method).MD5HashGuid();
-
 
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
         private static Dictionary<string, string> tokens = new Dictionary<string, string>();
@@ -36,7 +40,15 @@ namespace EastFive.Api.Tests
         {
             return onProvideAuthorization(new ProvideLoginMock()).ToTask();
         }
-        
+
+        public static IDictionary<string, string> GetParameters(string externalSystemUserId)
+        {
+            return new Dictionary<string, string>()
+            {
+                { extraParamToken, externalSystemUserId }
+            };
+        }
+
         public Type CallbackController => typeof(ProvideLoginMock);
         
         public Task<TResult> RedeemTokenAsync<TResult>(
@@ -63,8 +75,13 @@ namespace EastFive.Api.Tests
             return onSuccess(userId, stateId, default(Guid?), tokensFromResponse).ToTask();
         }
 
-        public TResult ParseCredentailParameters<TResult>(IDictionary<string, string> tokensFromResponse, Func<string, Guid?, Guid?, TResult> onSuccess, Func<string, TResult> onFailure)
+        public TResult ParseCredentailParameters<TResult>(IDictionary<string, string> tokensFromResponse,
+            Func<string, Guid?, Guid?, TResult> onSuccess, 
+            Func<string, TResult> onFailure)
         {
+            if (!tokensFromResponse.ContainsKey(ProvideLoginMock.extraParamToken))
+                return onFailure("Invalid dictionary.");
+
             var idToken = tokensFromResponse[ProvideLoginMock.extraParamToken];
             if (!tokens.ContainsKey(idToken))
                 return onFailure("Token not found");
@@ -172,23 +189,53 @@ namespace EastFive.Api.Tests
                 new Dictionary<string, string>() { { "push_pmp_file_to_ehr", "When true, the system will push PMP files into the provider's clinical documents in their EHR system." } }).ToTask();
         }
 
-        public static Redirection GetResponse(string userIdProvider)
+        public static Redirection GetResponse(string userKey, Guid stateId)
         {
-            var token = ProvideLoginMock.GetToken(userIdProvider);
+            var token = ProvideLoginMock.GetToken(userKey);
             return new Redirection()
             {
-
+                state = stateId,
+                token = token,
             };
-        }
-
-        public static IDictionary<string, string> GetParameters(string externalSystemUserId)
-        {
-            throw new NotImplementedException();
         }
     }
 
+    [FunctionViewController4(
+        Route = "MockRedirection",
+        Resource = typeof(Redirection),
+        ContentType = "x-application/auth-redirection.mock",
+        ContentTypeVersion = "0.1")]
     public class Redirection : EastFive.Azure.Auth.Redirection
     {
+        [ApiProperty(PropertyName = ProvideLoginMock.extraParamState)]
+        [JsonProperty(PropertyName = ProvideLoginMock.extraParamState)]
+        public Guid state;
 
+        [ApiProperty(PropertyName = ProvideLoginMock.extraParamToken)]
+        [JsonProperty(PropertyName = ProvideLoginMock.extraParamToken)]
+        public string token;
+
+        [HttpGet(MatchAllParameters = false)]
+        public static async Task<HttpResponseMessage> Get(
+                [QueryParameter(Name = ProvideLoginMock.extraParamState)]IRef<EastFive.Azure.Auth.Authorization> authorizationRef,
+                [QueryParameter(Name = ProvideLoginMock.extraParamToken)]string token,
+                AzureApplication application, UrlHelper urlHelper,
+                HttpRequestMessage request,
+            RedirectResponse redirectResponse,
+            BadRequestResponse onBadRequest)
+        {
+            var authentication = await EastFive.Azure.Auth.Authentication.ByMethodName(
+                ProvideLoginMock.IntegrationName, application);
+            return await EastFive.Azure.Auth.Redirection.ProcessRequestAsync(authentication,
+                    new Dictionary<string, string>()
+                    {
+                        { ProvideLoginMock.extraParamState, authorizationRef.id.ToString() },
+                        { ProvideLoginMock.extraParamToken, token },
+                    },
+                    application,
+                    request, urlHelper,
+                (redirect, why) => redirectResponse(redirect, "success"),
+                (why) => onBadRequest().AddReason(why));
+        }
     }
 }

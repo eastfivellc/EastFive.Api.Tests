@@ -406,6 +406,7 @@ namespace EastFive.Api.Tests
         {
             var queryParams = typeof(TResource)
                 .GetMembers()
+                .Where(member => member.MemberType == MemberTypes.Property || member.MemberType == MemberTypes.Field)
                 .Select(
                     memberInfo =>
                     {
