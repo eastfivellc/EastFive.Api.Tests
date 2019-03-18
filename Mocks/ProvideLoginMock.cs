@@ -14,6 +14,8 @@ using EastFive.Api.Controllers;
 using System.Web.Http.Routing;
 using BlackBarLabs.Api;
 using Newtonsoft.Json;
+using EastFive.Azure.Auth;
+using EastFive.Extensions;
 
 namespace EastFive.Api.Tests
 {
@@ -209,6 +211,22 @@ namespace EastFive.Api.Tests
         }
     }
 
+    public class ProvideLoginAccountMock : ProvideLoginMock, IProvideAccountInformation
+    {
+        public Task<TResult> CreateAccount<TResult>(string subject,
+                IDictionary<string, string> extraParameters,
+                Method authentication, Authorization authorization, 
+                AzureApplication webApiApplication, 
+            Func<Guid, TResult> onCreatedMapping,
+            Func<TResult> onNoChange)
+        {
+            var accountId = MapAccount(subject);
+            return onCreatedMapping(accountId).AsTask();
+        }
+
+        public Func<string, Guid> MapAccount { get; set; }
+    }
+
     [FunctionViewController4(
         Route = "MockRedirection",
         Resource = typeof(Redirection),
@@ -233,7 +251,7 @@ namespace EastFive.Api.Tests
             RedirectResponse redirectResponse,
             BadRequestResponse onBadRequest)
         {
-            var authentication = await EastFive.Azure.Auth.Authentication.ByMethodName(
+            var authentication = await EastFive.Azure.Auth.Method.ByMethodName(
                 ProvideLoginMock.IntegrationName, application);
             var parameters = new Dictionary<string, string>()
                     {
