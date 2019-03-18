@@ -198,6 +198,15 @@ namespace EastFive.Api.Tests
                 token = token,
             };
         }
+
+        public static Redirection GetResponse(string userKey)
+        {
+            var token = ProvideLoginMock.GetToken(userKey);
+            return new Redirection()
+            {
+                token = token,
+            };
+        }
     }
 
     [FunctionViewController4(
@@ -209,7 +218,7 @@ namespace EastFive.Api.Tests
     {
         [ApiProperty(PropertyName = ProvideLoginMock.extraParamState)]
         [JsonProperty(PropertyName = ProvideLoginMock.extraParamState)]
-        public Guid state;
+        public Guid? state;
 
         [ApiProperty(PropertyName = ProvideLoginMock.extraParamToken)]
         [JsonProperty(PropertyName = ProvideLoginMock.extraParamToken)]
@@ -217,7 +226,7 @@ namespace EastFive.Api.Tests
 
         [HttpGet(MatchAllParameters = false)]
         public static async Task<HttpResponseMessage> Get(
-                [QueryParameter(Name = ProvideLoginMock.extraParamState)]IRef<EastFive.Azure.Auth.Authorization> authorizationRef,
+                [QueryParameter(Name = ProvideLoginMock.extraParamState)]IRefOptional<EastFive.Azure.Auth.Authorization> authorizationRef,
                 [QueryParameter(Name = ProvideLoginMock.extraParamToken)]string token,
                 AzureApplication application, UrlHelper urlHelper,
                 HttpRequestMessage request,
@@ -226,12 +235,15 @@ namespace EastFive.Api.Tests
         {
             var authentication = await EastFive.Azure.Auth.Authentication.ByMethodName(
                 ProvideLoginMock.IntegrationName, application);
-            return await EastFive.Azure.Auth.Redirection.ProcessRequestAsync(authentication,
-                    new Dictionary<string, string>()
+            var parameters = new Dictionary<string, string>()
                     {
-                        { ProvideLoginMock.extraParamState, authorizationRef.id.ToString() },
                         { ProvideLoginMock.extraParamToken, token },
-                    },
+                    };
+            if(authorizationRef.HasValue)
+                parameters.Add(ProvideLoginMock.extraParamState, authorizationRef.id.ToString());
+
+            return await EastFive.Azure.Auth.Redirection.ProcessRequestAsync(authentication,
+                    parameters,
                     application,
                     request, urlHelper,
                 (redirect, why) => redirectResponse(redirect, "success"),

@@ -688,7 +688,8 @@ namespace EastFive.Api.Tests
             return application.MethodAsync<TResource, TResult, TResult>(new HttpMethod("patch"),
                 (request) =>
                 {
-                    request.Content = new StreamContent(JsonConvert.SerializeObject(resource).ToStream());
+                    var contentJsonString = JsonConvert.SerializeObject(resource, new RefConverter());
+                    request.Content = new StreamContent(contentJsonString.ToStream());
                     request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                     return request;
                 },
