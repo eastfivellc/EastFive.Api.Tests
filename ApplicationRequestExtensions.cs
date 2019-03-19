@@ -496,7 +496,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(new Expression<Action<TResource>>[] {  },
                 onContent: onContent,
