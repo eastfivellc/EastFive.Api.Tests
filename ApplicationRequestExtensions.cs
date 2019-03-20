@@ -465,7 +465,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
                 (request) =>
@@ -484,8 +485,8 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onHtml: onHtml);
-
+                onHtml: onHtml,
+                onExecuteBackground: onExecuteBackground);
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
@@ -507,7 +508,8 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect:onRedirect,
-                onHtml: onHtml);
+                onHtml: onHtml,
+                onExecuteBackground: onExecuteBackground);
         }
 
 
@@ -520,7 +522,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(new[] { param1 },
                 onContent: onContent,
@@ -530,7 +533,8 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onHtml: onHtml);
+                onHtml: onHtml,
+                onExecuteBackground: onExecuteBackground);
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
@@ -543,7 +547,8 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(
                     new Expression<Action<TResource>>[] { param1, param2 },
@@ -554,7 +559,8 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onHtml: onHtml);
+                onHtml: onHtml,
+                onExecuteBackground: onExecuteBackground);
         }
 
         /// <summary>
