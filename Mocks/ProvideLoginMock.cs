@@ -213,7 +213,7 @@ namespace EastFive.Api.Tests
 
     public class ProvideLoginAccountMock : ProvideLoginMock, IProvideAccountInformation
     {
-        public Task<TResult> CreateAccount<TResult>(string subject,
+        public async Task<TResult> CreateAccount<TResult>(string subject,
                 IDictionary<string, string> extraParameters,
                 Method authentication, Authorization authorization, 
                 AzureApplication webApiApplication, 
@@ -221,10 +221,16 @@ namespace EastFive.Api.Tests
             Func<TResult> onNoChange)
         {
             var accountId = MapAccount(subject);
-            return onCreatedMapping(accountId).AsTask();
+            await OnNewAccount(accountId, subject);
+            return onCreatedMapping(accountId);
         }
 
         public Func<string, Guid> MapAccount { get; set; }
+
+        protected virtual async Task OnNewAccount(Guid accountId, string subject)
+        {
+            await 1.AsTask();
+        }
     }
 
     [FunctionViewController4(
