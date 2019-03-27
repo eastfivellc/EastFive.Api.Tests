@@ -241,6 +241,7 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
@@ -272,6 +273,8 @@ namespace EastFive.Api.Tests
                 application.MultipartContentObjectResponse<TResource, TResult>(onContentObjects);
             application.NotFoundResponse<TResource, TResult>(onNotFound);
             application.HtmlResponse<TResource, TResult>(onHtml);
+            application.XlsResponse<TResource, TResult>(onXls);
+
 
             application.NoContentResponse<TResource, TResult>(onUpdated);
             application.UnauthorizedResponse<TResource, TResult>(onUnauthorized);
@@ -433,6 +436,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
@@ -452,6 +456,7 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
+                onCreated: onCreated,
                 onHtml: onHtml);
 
         }
@@ -466,6 +471,8 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
@@ -486,6 +493,8 @@ namespace EastFive.Api.Tests
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
                 onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
                 onExecuteBackground: onExecuteBackground);
         }
 
@@ -498,6 +507,8 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(new Expression<Action<TResource>>[] {  },
@@ -509,6 +520,8 @@ namespace EastFive.Api.Tests
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect:onRedirect,
                 onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
                 onExecuteBackground: onExecuteBackground);
         }
 
@@ -523,6 +536,8 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(new[] { param1 },
@@ -534,6 +549,8 @@ namespace EastFive.Api.Tests
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
                 onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
                 onExecuteBackground: onExecuteBackground);
         }
 
@@ -548,6 +565,8 @@ namespace EastFive.Api.Tests
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(
@@ -560,6 +579,8 @@ namespace EastFive.Api.Tests
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
                 onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
                 onExecuteBackground: onExecuteBackground);
         }
 
@@ -797,6 +818,25 @@ namespace EastFive.Api.Tests
                             if (onHtml.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.HtmlResponse), thisAgain, requestAgain, paramInfo, onSuccess);
                             var result = onHtml(content);
+                            return new AttachedHttpResponseMessage<TResult>(result);
+                        };
+                    return onSuccess(created);
+                });
+        }
+
+        private static void XlsResponse<TResource, TResult>(this ITestApplication application,
+            Func<byte[], string, TResult> onXls)
+        {
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.XlsxResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.XlsxResponse created =
+                        (content, name) =>
+                        {
+                            if (onXls.IsDefaultOrNull())
+                                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.XlsxResponse), thisAgain, requestAgain, paramInfo, onSuccess);
+                            var result = onXls(content, name);
                             return new AttachedHttpResponseMessage<TResult>(result);
                         };
                     return onSuccess(created);
