@@ -97,6 +97,22 @@ namespace EastFive.Api.Tests
             return httpRequest;
         }
 
+        private static HttpRequestMessage GetRequest(this ITestApplication application, HttpMethod method, Uri location)
+        {
+            var httpRequest = new HttpRequestMessage(); // $"{hostingLocation}/{routesApi[0]}/{functionViewControllerAttribute.Route}");
+            httpRequest.Method = method;
+            var config = new HttpConfiguration();
+
+            httpRequest.RequestUri = location;
+
+            httpRequest.SetConfiguration(config);
+
+            foreach (var headerKVP in application.Headers)
+                httpRequest.Headers.Add(headerKVP.Key, headerKVP.Value);
+
+            return httpRequest;
+        }
+
         public static Task<TResult> ActionAsync<TResource, TResult>(this ITestApplication application,
                 string action,
                 Expression<Action<TResource>> param1,
@@ -225,6 +241,7 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
             Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
@@ -256,6 +273,8 @@ namespace EastFive.Api.Tests
                 application.MultipartContentObjectResponse<TResource, TResult>(onContentObjects);
             application.NotFoundResponse<TResource, TResult>(onNotFound);
             application.HtmlResponse<TResource, TResult>(onHtml);
+            application.XlsResponse<TResource, TResult>(onXls);
+
 
             application.NoContentResponse<TResource, TResult>(onUpdated);
             application.UnauthorizedResponse<TResource, TResult>(onUnauthorized);
@@ -305,6 +324,67 @@ namespace EastFive.Api.Tests
                 });
         }
 
+        public static async Task<TResult> UrlAsync<TResource, TResultInner, TResult>(this ITestApplication application,
+                HttpMethod method, Uri location,
+            Func<TResultInner, TResult> onExecuted,
+
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
+            Func<TResult> onUpdated = default(Func<TResult>),
+
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onUnauthorized = default(Func<TResult>),
+            Func<TResult> onExists = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<string, TResult> onFailure = default(Func<string, TResult>),
+
+            Func<TResult> onNotImplemented = default(Func<TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
+        {
+            application.CreatedResponse<TResource, TResult>(onCreated);
+            application.CreatedBodyResponse<TResource, TResult>(onCreatedBody);
+            application.BadRequestResponse<TResource, TResult>(onBadRequest);
+            application.AlreadyExistsResponse<TResource, TResult>(onExists);
+            application.RefNotFoundTypeResponse(onRefDoesNotExistsType);
+            application.RedirectResponse<TResource, TResult>(onRedirect);
+            application.NotImplementedResponse<TResource, TResult>(onNotImplemented);
+
+            application.ContentResponse(onContent);
+            application.ContentTypeResponse<TResource, TResult>((body, contentType) => onContent(body));
+            application.MultipartContentResponse(onContents);
+            if (!onContentObjects.IsDefaultOrNull())
+                application.MultipartContentObjectResponse<TResource, TResult>(onContentObjects);
+            application.NotFoundResponse<TResource, TResult>(onNotFound);
+            application.HtmlResponse<TResource, TResult>(onHtml);
+
+            application.NoContentResponse<TResource, TResult>(onUpdated);
+            application.UnauthorizedResponse<TResource, TResult>(onUnauthorized);
+            application.GeneralConflictResponse<TResource, TResult>(onFailure);
+            application.ExecuteBackgroundResponse<TResource, TResult>(onExecuteBackground);
+
+            var request = application.GetRequest(method, location);
+            var response = await application.SendAsync(request);
+
+            if (response is IDidNotOverride)
+            {
+                (response as IDidNotOverride).OnFailure();
+            }
+
+            if (!(response is IReturnResult))
+                Assert.Fail($"Failed to override response with status code `{response.StatusCode}` for {typeof(TResource).FullName}\nResponse:{response.ReasonPhrase}");
+
+            var attachedResponse = response as IReturnResult;
+            var result = attachedResponse.GetResultCasted<TResultInner>();
+            return onExecuted(result);
+        }
+
         private static Uri AssignQueryExpressions<TResource>(this Uri baseUri, ITestApplication application, Expression<Action<TResource>>[] parameters)
         {
             var queryParams = parameters
@@ -325,6 +405,62 @@ namespace EastFive.Api.Tests
             return updatedUri;
         }
 
+        private static Uri AssignResourceToQuery<TResource>(this Uri baseUri, ITestApplication application, TResource resource)
+        {
+            var queryParams = typeof(TResource)
+                .GetMembers()
+                .Where(member => member.MemberType == MemberTypes.Property || member.MemberType == MemberTypes.Field)
+                .Select(
+                    memberInfo =>
+                    {
+                        var propName = memberInfo.GetCustomAttribute<JsonPropertyAttribute, string>(
+                            jsonAttr => jsonAttr.PropertyName,
+                            () => memberInfo.Name);
+                        var value = memberInfo.GetValue(resource);
+                        var propertyValue = (string)application.CastResourceProperty(value, typeof(String));
+                        return propName.PairWithValue(propertyValue);
+                    })
+                .Concat(baseUri.ParseQuery())
+                .ToDictionary();
+
+            var updatedUri = baseUri.SetQuery(queryParams);
+            return updatedUri;
+        }
+
+        public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
+                TResource resourceForQuery,
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>))
+        {
+            return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
+                (request) =>
+                {
+                    request.RequestUri = request.RequestUri.AssignResourceToQuery(application, resourceForQuery);
+                    return request;
+                },
+                (TResult result) =>
+                {
+                    return result;
+                },
+                onContent: onContent,
+                onContents: onContents,
+                onContentObjects: onContentObjects,
+                onBadRequest: onBadRequest,
+                onNotFound: onNotFound,
+                onRefDoesNotExistsType: onRefDoesNotExistsType,
+                onRedirect: onRedirect,
+                onCreated: onCreated,
+                onHtml: onHtml);
+
+        }
+
         private static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
                 Expression<Action<TResource>>[] parameters,
             Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
@@ -334,24 +470,14 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Get,
                 (request) =>
                 {
-                    //var queryParams = parameters
-                    //    .Select(
-                    //        param =>
-                    //        {
-                    //            return param.GetUrlAssignment(
-                    //                (propName, value) =>
-                    //                {
-                    //                    var propertyValue = (string)application.CastResourceProperty(value, typeof(String));
-                    //                    return propName.PairWithValue(propertyValue);
-                    //                });
-                    //        })
-                    //    .ToDictionary();
-
                     request.RequestUri = AssignQueryExpressions(request.RequestUri, application, parameters);
                     return request;
                 },
@@ -366,8 +492,10 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onHtml: onHtml);
-
+                onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
+                onExecuteBackground: onExecuteBackground);
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
@@ -378,7 +506,10 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(new Expression<Action<TResource>>[] {  },
                 onContent: onContent,
@@ -388,7 +519,10 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect:onRedirect,
-                onHtml: onHtml);
+                onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
+                onExecuteBackground: onExecuteBackground);
         }
 
 
@@ -401,7 +535,10 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(new[] { param1 },
                 onContent: onContent,
@@ -411,7 +548,10 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onHtml: onHtml);
+                onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
+                onExecuteBackground: onExecuteBackground);
         }
 
         public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
@@ -424,7 +564,10 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
             Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>))
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
             return application.GetAsync(
                     new Expression<Action<TResource>>[] { param1, param2 },
@@ -435,7 +578,10 @@ namespace EastFive.Api.Tests
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
                 onRedirect: onRedirect,
-                onHtml: onHtml);
+                onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
+                onExecuteBackground: onExecuteBackground);
         }
 
         /// <summary>
@@ -562,6 +708,7 @@ namespace EastFive.Api.Tests
         public static Task<TResult> PatchAsync<TResource, TResult>(this ITestApplication application,
                 TResource resource,
             Func<TResult> onUpdated = default(Func<TResult>),
+            Func<TResource, TResult> onUpdatedBody = default(Func<TResource, TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<TResult> onUnauthorized = default(Func<TResult>),
             Func<string, TResult> onFailure = default(Func<string, TResult>))
@@ -569,7 +716,8 @@ namespace EastFive.Api.Tests
             return application.MethodAsync<TResource, TResult, TResult>(new HttpMethod("patch"),
                 (request) =>
                 {
-                    request.Content = new StreamContent(JsonConvert.SerializeObject(resource).ToStream());
+                    var contentJsonString = JsonConvert.SerializeObject(resource, new RefConverter());
+                    request.Content = new StreamContent(contentJsonString.ToStream());
                     request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                     return request;
                 },
@@ -578,6 +726,7 @@ namespace EastFive.Api.Tests
                     return result;
                 },
                 onUpdated: onUpdated,
+                onContent:onUpdatedBody,
                 onNotFound: onNotFound,
                 onUnauthorized: onUnauthorized,
                 onFailure: onFailure);
@@ -669,6 +818,25 @@ namespace EastFive.Api.Tests
                             if (onHtml.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.HtmlResponse), thisAgain, requestAgain, paramInfo, onSuccess);
                             var result = onHtml(content);
+                            return new AttachedHttpResponseMessage<TResult>(result);
+                        };
+                    return onSuccess(created);
+                });
+        }
+
+        private static void XlsResponse<TResource, TResult>(this ITestApplication application,
+            Func<byte[], string, TResult> onXls)
+        {
+            application.SetInstigator(
+                typeof(EastFive.Api.Controllers.XlsxResponse),
+                (thisAgain, requestAgain, paramInfo, onSuccess) =>
+                {
+                    EastFive.Api.Controllers.XlsxResponse created =
+                        (content, name) =>
+                        {
+                            if (onXls.IsDefaultOrNull())
+                                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.XlsxResponse), thisAgain, requestAgain, paramInfo, onSuccess);
+                            var result = onXls(content, name);
                             return new AttachedHttpResponseMessage<TResult>(result);
                         };
                     return onSuccess(created);
