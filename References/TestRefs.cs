@@ -264,14 +264,8 @@ namespace EastFive.Api.Tests
 
         public TType? value => throw new NotImplementedException();
 
-        public bool resolved => false;
-
         public bool HasValue => this.id.HasValue;
 
-        public Task ResolveAsync()
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class TestRefObjOptional<TType> : IRefObjOptional<TType>
@@ -298,15 +292,7 @@ namespace EastFive.Api.Tests
             }
         }
 
-        public bool resolved => false;
-
         public bool HasValue => this.id.HasValue;
 
-        TType IRefObjOptional<TType>.value => throw new NotImplementedException();
-
-        public Task ResolveAsync()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
