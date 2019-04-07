@@ -9,11 +9,11 @@ namespace EastFive.Api.Tests
 {
     public static class ReferenceExtensions
     {
-        public static IRef<TType> AsRef<TType>(this Guid guid)
-            where TType : struct
-        {
-            return new TestRef<TType>(guid);
-        }
+        //public static IRef<TType> AsRef<TType>(this Guid guid)
+        //    where TType : struct
+        //{
+        //    return new TestRef<TType>(guid);
+        //}
 
         public static IRefObj<TType> AsRefObj<TType>(this Guid guid)
             where TType : class
