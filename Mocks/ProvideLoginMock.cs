@@ -21,7 +21,7 @@ namespace EastFive.Api.Tests
 {
     [Azure.Credentials.Attributes.IntegrationName(IntegrationName)]
     public class ProvideLoginMock : IdentityServerConfiguration<Security.SessionServer.Tests.Controllers.ActorController>,
-        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideToken
+        IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideToken, IProvideSession
     {
         public const string IntegrationName = "Mock";
         public string Method => IntegrationName;
@@ -208,6 +208,11 @@ namespace EastFive.Api.Tests
             {
                 token = token,
             };
+        }
+
+        public Task<bool> SupportsSessionAsync(EastFive.Azure.Auth.Session session)
+        {
+            return true.AsTask();
         }
     }
 
