@@ -223,6 +223,7 @@ namespace EastFive.Api.Tests
                 Method authentication, Authorization authorization, 
                 AzureApplication webApiApplication, 
             Func<Guid, TResult> onCreatedMapping,
+            Func<Uri, TResult> onInterceptProcess,
             Func<TResult> onNoChange)
         {
             var accountId = MapAccount(subject);
