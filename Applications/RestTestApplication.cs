@@ -155,6 +155,8 @@ namespace EastFive.Api.Tests
 
     public class ExecuteContext : Controllers.IExecuteAsync
     {
+        public bool ForceBackground => throw new NotImplementedException();
+
         public Task<HttpResponseMessage> InvokeAsync(Action<double> updateCallback)
         {
             throw new NotImplementedException();
