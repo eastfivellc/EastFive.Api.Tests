@@ -15,6 +15,7 @@ namespace BlackBarLabs.Api.Tests.Tests
     [TestClass]
     public class QueryParsingTests
     {
+        [TestCategory("CI")]
         [TestMethod]
         public async Task ParseQueryForId()
         {
@@ -40,6 +41,7 @@ namespace BlackBarLabs.Api.Tests.Tests
             Assert.IsTrue(ran);
         }
 
+        [TestCategory("CI")]
         [TestMethod]
         public async Task ParseQueryForAssociatedId()
         {
@@ -64,6 +66,7 @@ namespace BlackBarLabs.Api.Tests.Tests
             Assert.IsTrue(ran);
         }
 
+        [TestCategory("CI")]
         [TestMethod]
         public async Task ParseQueryForArray()
         {
