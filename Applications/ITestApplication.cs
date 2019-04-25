@@ -10,9 +10,6 @@ namespace EastFive.Api.Tests
 {
     public interface ITestApplication
     {
-        [Obsolete]
-        Guid ActorId { get; }
-
         IDictionary<string, string> Headers { get; }
 
         Task<HttpResponseMessage> SendAsync(HttpRequestMessage request);

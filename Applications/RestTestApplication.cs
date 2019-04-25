@@ -24,8 +24,6 @@ namespace EastFive.Api.Tests
             this.authenticationToken = authenticationToken;
         }
 
-        public Guid ActorId => throw new NotImplementedException();
-
         public IDictionary<string, string> Headers
         {
             get
