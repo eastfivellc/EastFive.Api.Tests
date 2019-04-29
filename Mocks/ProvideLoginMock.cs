@@ -263,6 +263,7 @@ namespace EastFive.Api.Tests
                 AzureApplication application, UrlHelper urlHelper,
                 HttpRequestMessage request,
             RedirectResponse redirectResponse,
+            ServiceUnavailableResponse onNoServiceResponse,
             BadRequestResponse onBadRequest)
         {
             var authentication = await EastFive.Azure.Auth.Method.ByMethodName(
@@ -279,6 +280,7 @@ namespace EastFive.Api.Tests
                     application,
                     request, urlHelper,
                 (redirect, why) => redirectResponse(redirect, "success"),
+                (why) => onNoServiceResponse().AddReason(why),
                 (why) => onBadRequest().AddReason(why));
         }
     }
