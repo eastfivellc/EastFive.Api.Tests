@@ -1122,9 +1122,23 @@ namespace EastFive.Api.Tests
                 typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
                 (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    var scope = new CallbackWrapper<TResource, TResult>(onContents, null, thisAgain, requestAgain, paramInfo, onSuccess);
-                    var multipartResponseMethodInfoGeneric = typeof(CallbackWrapper<TResource, TResult>).GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Instance);
-                    var multipartResponseMethodInfoBound = multipartResponseMethodInfoGeneric; // multipartResponseMethodInfoGeneric.MakeGenericMethod(type.GenericTypeArguments);
+                    var callbackWrapperType = typeof(CallbackWrapper<,>).MakeGenericType(
+                        paramInfo.ParameterType.GenericTypeArguments.Append(typeof(TResult)).ToArray());
+
+                    //  new CallbackWrapper<TResource, TResult>(onContents, null, thisAgain, requestAgain, paramInfo, onSuccess);
+                    var instantiationParams = new object[]
+                        {
+                            onContents,
+                            null,
+                            thisAgain,
+                            requestAgain,
+                            paramInfo,
+                            onSuccess,
+                        };
+                    var scope = Activator.CreateInstance(callbackWrapperType, instantiationParams);
+
+                    var multipartResponseMethodInfoGeneric = callbackWrapperType.GetMethod("MultipartResponseAsyncGeneric", BindingFlags.Public | BindingFlags.Instance);
+                    var multipartResponseMethodInfoBound = multipartResponseMethodInfoGeneric;
                     var dele = Delegate.CreateDelegate(type, scope, multipartResponseMethodInfoBound);
                     return onSuccess((object)dele);
                 });
