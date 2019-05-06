@@ -13,10 +13,6 @@ namespace EastFive.Api.Tests
     {
         public override bool CanConvert(Type objectType)
         {
-            if (objectType.IsSubClassOfGeneric(typeof(TestRef<>)))
-                return true;
-            if (objectType.IsSubClassOfGeneric(typeof(TestRefs<>)))
-                return true;
             if (objectType.IsSubClassOfGeneric(typeof(IRefOptional<>)))
                 return true;
             if (objectType.IsSubClassOfGeneric(typeof(IDictionary<,>)))
@@ -82,7 +78,7 @@ namespace EastFive.Api.Tests
                 if (objectType.IsSubClassOfGeneric(typeof(IRef<>)))
                 {
                     var id = GetGuid();
-                    var refType = typeof(TestRef<>).MakeGenericType(objectType.GenericTypeArguments);
+                    var refType = typeof(Ref<>).MakeGenericType(objectType.GenericTypeArguments);
                     return Activator.CreateInstance(refType, id);
                 }
             }
@@ -92,7 +88,7 @@ namespace EastFive.Api.Tests
                 if (objectType.IsSubClassOfGeneric(typeof(IRefOptional<>)))
                 {
                     var id = GetGuidMaybe();
-                    var refType = typeof(TestRefOptional<>).MakeGenericType(objectType.GenericTypeArguments);
+                    var refType = typeof(RefOptional<>).MakeGenericType(objectType.GenericTypeArguments);
                     return Activator.CreateInstance(refType, id);
                 }
             }
@@ -102,7 +98,7 @@ namespace EastFive.Api.Tests
                 if (objectType.IsSubClassOfGeneric(typeof(IRefs<>)))
                 {
                     var ids = GetGuids();
-                    var refType = typeof(TestRefs<>).MakeGenericType(objectType.GenericTypeArguments);
+                    var refType = typeof(Refs<>).MakeGenericType(objectType.GenericTypeArguments);
                     return Activator.CreateInstance(refType, ids);
                 }
             }
@@ -165,134 +161,4 @@ namespace EastFive.Api.Tests
         }
     }
 
-    public class TestRef<TType> : IRef<TType>
-        where TType : struct
-    {
-        public TestRef(Guid id)
-        {
-            this.id = id;
-        }
-
-        public Guid id
-        {
-            get;
-            private set;
-        }
-
-        public TType? value => throw new NotImplementedException();
-
-        public bool resolved => false;
-        
-        public Task ResolveAsync()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class TestRefObj<TType> : IRefObj<TType>
-        where TType : class
-    {
-        public TestRefObj(Guid id)
-        {
-            this.id = id;
-        }
-
-        public Guid id
-        {
-            get;
-            private set;
-        }
-
-        public bool resolved => false;
-
-        Func<TType> IRefObj<TType>.value => throw new NotImplementedException();
-
-        public Task ResolveAsync()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class TestRefs<TType> : IRefs<TType>
-        where TType : struct
-    {
-        public TestRefs(Guid[] ids)
-        {
-            this.ids = ids;
-        }
-
-        public Guid[] ids
-        {
-            get;
-            private set;
-        }
-
-        public IEnumerableAsync<TType> Values => throw new NotImplementedException();
-
-        public IRef<TType>[] refs
-        {
-            get
-            {
-                return ids.Select(id => new TestRef<TType>(id)).ToArray();
-            }
-        }
-    }
-
-    public class TestRefOptional<TType> : IRefOptional<TType>
-        where TType : struct
-    {
-        public TestRefOptional(Guid? id)
-        {
-            this.id = id;
-        }
-
-        public Guid? id
-        {
-            get;
-            private set;
-        }
-
-        public IRef<TType> Ref
-        {
-            get
-            {
-                if (!this.HasValue)
-                    throw new Exception("Attempt to de-option empty value");
-                return new TestRef<TType>(this.id.Value);
-            }
-        }
-
-        public TType? value => throw new NotImplementedException();
-
-        public bool HasValue => this.id.HasValue;
-
-    }
-
-    public class TestRefObjOptional<TType> : IRefObjOptional<TType>
-        where TType : class
-    {
-        public TestRefObjOptional(Guid? id)
-        {
-            this.id = id;
-        }
-
-        public Guid? id
-        {
-            get;
-            private set;
-        }
-
-        public IRefObj<TType> Ref
-        {
-            get
-            {
-                if (!this.HasValue)
-                    throw new Exception("Attempt to de-option empty value");
-                return new TestRefObj<TType>(this.id.Value);
-            }
-        }
-
-        public bool HasValue => this.id.HasValue;
-
-    }
 }
