@@ -16,6 +16,7 @@ using BlackBarLabs.Api;
 using Newtonsoft.Json;
 using EastFive.Azure.Auth;
 using EastFive.Extensions;
+using EastFive.Reflection;
 
 namespace EastFive.Api.Tests
 {
@@ -224,15 +225,53 @@ namespace EastFive.Api.Tests
                 Uri baseUri,
                 AzureApplication webApiApplication, 
             Func<Guid, TResult> onCreatedMapping,
+            Func<TResult> onAllowSelfServeAccounts,
             Func<Uri, TResult> onInterceptProcess,
             Func<TResult> onNoChange)
         {
-            var accountId = MapAccount(subject);
-            await OnNewAccount(accountId, subject);
-            return onCreatedMapping(accountId);
+            var resultObjTask = await MapAccount(subject,
+                extraParameters, authentication, authorization,
+                baseUri,
+                webApiApplication,
+                (accountId) =>
+                {
+                    async Task<TResult> Func()
+                    {
+                        await OnNewAccount(accountId, subject);
+                        return onCreatedMapping(accountId);
+                    }
+                    return Func();
+                },
+                () =>
+                {
+                    TResult result = onAllowSelfServeAccounts();
+                    return result.AsTask();
+                },
+                uri =>
+                {
+                    TResult result = onInterceptProcess(uri);
+                    return result.AsTask();
+                },
+                () =>
+                {
+                    TResult result = onNoChange();
+                    return result.AsTask();
+                });
+            var resultCasted = await resultObjTask.CastTask<TResult>();
+            return resultCasted;
         }
 
-        public Func<string, Guid> MapAccount { get; set; }
+        public delegate Task<object> CreateAccountCallback(string subject,
+                IDictionary<string, string> extraParameters,
+                Method authentication, Authorization authorization,
+                Uri baseUri,
+                AzureApplication webApiApplication,
+            Func<Guid, object> onCreatedMapping,
+            Func<object> onAllowSelfServeAccounts,
+            Func<Uri, object> onInterceptProcess,
+            Func<object> onNoChange);
+
+        public CreateAccountCallback MapAccount { get; set; }
 
         protected virtual async Task OnNewAccount(Guid accountId, string subject)
         {
@@ -264,7 +303,8 @@ namespace EastFive.Api.Tests
                 HttpRequestMessage request,
             RedirectResponse redirectResponse,
             ServiceUnavailableResponse onNoServiceResponse,
-            BadRequestResponse onBadRequest)
+            BadRequestResponse onBadCredentials,
+            GeneralConflictResponse onFailure)
         {
             var authentication = await EastFive.Azure.Auth.Method.ByMethodName(
                 ProvideLoginMock.IntegrationName, application);
@@ -279,9 +319,14 @@ namespace EastFive.Api.Tests
                     parameters,
                     application,
                     request, urlHelper,
-                (redirect, why) => redirectResponse(redirect, "success"),
+                (redirect) =>
+                {
+                    var response = redirectResponse(redirect, "success");
+                    return response;
+                },
+                (why) => onBadCredentials().AddReason($"Bad credentials:{why}"),
                 (why) => onNoServiceResponse().AddReason(why),
-                (why) => onBadRequest().AddReason(why));
+                (why) => onFailure(why));
         }
     }
 }
