@@ -51,7 +51,6 @@ namespace EastFive.Api.Tests
 
             var routesApi = routesApiCSV.Split(new[] { ',' }).ToArray();
 
-
             var httpRequest = new HttpRequestMessage(); // $"{hostingLocation}/{routesApi[0]}/{functionViewControllerAttribute.Route}");
             httpRequest.Method = method;
             var config = new HttpConfiguration();
@@ -612,7 +611,7 @@ namespace EastFive.Api.Tests
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
                 (request) =>
                 {
-                    var contentJsonString = JsonConvert.SerializeObject(resource, new RefConverter());
+                    var contentJsonString = JsonConvert.SerializeObject(resource, new Serialization.Converter());
                     request.Content = new StreamContent(contentJsonString.ToStream());
                     request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                     return request;
@@ -716,7 +715,7 @@ namespace EastFive.Api.Tests
             return application.MethodAsync<TResource, TResult, TResult>(new HttpMethod("patch"),
                 (request) =>
                 {
-                    var contentJsonString = JsonConvert.SerializeObject(resource, new RefConverter());
+                    var contentJsonString = JsonConvert.SerializeObject(resource, new Serialization.Converter());
                     request.Content = new StreamContent(contentJsonString.ToStream());
                     request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                     return request;
