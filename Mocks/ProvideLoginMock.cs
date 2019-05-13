@@ -239,6 +239,10 @@ namespace EastFive.Api.Tests
             await 1.AsTask();
         }
 
+        public Task<TResult> CreateAccount<TResult>(string subject, IDictionary<string, string> extraParameters, Method authentication, Authorization authorization, Uri baseUri, AzureApplication webApiApplication, Func<Guid, TResult> onCreatedMapping, Func<TResult> onAllowSelfServeAccounts, Func<Uri, TResult> onInterceptProcess, Func<TResult> onNoChange)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [FunctionViewController4(
@@ -279,8 +283,9 @@ namespace EastFive.Api.Tests
                     parameters,
                     application,
                     request, urlHelper,
-                (redirect, why) => redirectResponse(redirect, "success"),
+                (redirect) => redirectResponse(redirect, "success"),
                 (why) => onNoServiceResponse().AddReason(why),
+                (why) => onBadRequest().AddReason(why),
                 (why) => onBadRequest().AddReason(why));
         }
     }
