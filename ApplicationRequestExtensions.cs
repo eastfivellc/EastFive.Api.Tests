@@ -584,6 +584,37 @@ namespace EastFive.Api.Tests
                 onExecuteBackground: onExecuteBackground);
         }
 
+        public static Task<TResult> GetAsync<TResource, TResult>(this ITestApplication application,
+                Expression<Action<TResource>> param1,
+                Expression<Action<TResource>> param2,
+                Expression<Action<TResource>> param3,
+            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
+            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
+            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
+            Func<TResult> onBadRequest = default(Func<TResult>),
+            Func<TResult> onNotFound = default(Func<TResult>),
+            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<string, TResult> onHtml = default(Func<string, TResult>),
+            Func<TResult> onCreated = default(Func<TResult>),
+            Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
+            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
+        {
+            return application.GetAsync(
+                    new Expression<Action<TResource>>[] { param1, param2, param3},
+                onContent: onContent,
+                onContents: onContents,
+                onContentObjects: onContentObjects,
+                onBadRequest: onBadRequest,
+                onNotFound: onNotFound,
+                onRefDoesNotExistsType: onRefDoesNotExistsType,
+                onRedirect: onRedirect,
+                onHtml: onHtml,
+                onCreated: onCreated,
+                onXls: onXls,
+                onExecuteBackground: onExecuteBackground);
+        }
+
         /// <summary>
         /// 
         /// </summary>

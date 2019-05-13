@@ -277,7 +277,6 @@ namespace EastFive.Api.Tests
         {
             await 1.AsTask();
         }
-
     }
 
     [FunctionViewController4(
