@@ -43,10 +43,10 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        private Dictionary<HttpStatusCode, HttpApplication.InstigatorDelegate> instigators =
-            new Dictionary<HttpStatusCode, HttpApplication.InstigatorDelegate>();
+        private Dictionary<HttpStatusCode, InstigatorDelegate> instigators =
+            new Dictionary<HttpStatusCode, InstigatorDelegate>();
 
-        public void SetInstigator(Type type, HttpApplication.InstigatorDelegate instigator, bool clear = false)
+        public void SetInstigator(Type type, InstigatorDelegate instigator, bool clear = false)
         {
             if(type.ContainsCustomAttribute<HttpActionDelegateAttribute>())
             {
@@ -64,10 +64,10 @@ namespace EastFive.Api.Tests
             }
         }
 
-        private Dictionary<HttpStatusCode, HttpApplication.InstigatorDelegateGeneric> instigatorsGeneric =
-            new Dictionary<HttpStatusCode, HttpApplication.InstigatorDelegateGeneric>();
+        private Dictionary<HttpStatusCode, InstigatorDelegateGeneric> instigatorsGeneric =
+            new Dictionary<HttpStatusCode, InstigatorDelegateGeneric>();
 
-        public void SetInstigatorGeneric(Type type, HttpApplication.InstigatorDelegateGeneric instigator,
+        public void SetInstigatorGeneric(Type type, InstigatorDelegateGeneric instigator,
             bool clear = false)
         {
             if (type.ContainsCustomAttribute<HttpActionDelegateAttribute>())

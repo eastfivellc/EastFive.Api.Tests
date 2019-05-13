@@ -25,8 +25,6 @@ namespace EastFive.Api.Tests
                 return true;
             if (objectType.IsSubClassOfGeneric(typeof(IRefOptional<>)))
                 return true;
-            if (objectType.IsSubClassOfGeneric(typeof(IRefObjOptional<>)))
-                return true;
             if (objectType.IsSubClassOfGeneric(typeof(IRefs<>)))
                 return true;
             // THis doesn't work because it will serialize the whole object as a single GUID
