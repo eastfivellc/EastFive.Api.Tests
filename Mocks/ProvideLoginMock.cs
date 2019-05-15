@@ -277,7 +277,6 @@ namespace EastFive.Api.Tests
         {
             await 1.AsTask();
         }
-
     }
 
     [FunctionViewController4(
@@ -321,7 +320,7 @@ namespace EastFive.Api.Tests
                     request, urlHelper,
                 (redirect) =>
                 {
-                    var response = redirectResponse(redirect, "success");
+                    var response = redirectResponse(redirect);
                     return response;
                 },
                 (why) => onBadCredentials().AddReason($"Bad credentials:{why}"),
