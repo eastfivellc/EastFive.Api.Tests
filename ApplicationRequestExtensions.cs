@@ -123,7 +123,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
 
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onUnauthorized = default(Func<TResult>),
@@ -159,7 +159,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
 
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onUnauthorized = default(Func<TResult>),
@@ -196,7 +196,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
 
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onUnauthorized = default(Func<TResult>),
@@ -246,7 +246,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
 
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onUnauthorized = default(Func<TResult>),
@@ -336,7 +336,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
             Func<TResult> onUpdated = default(Func<TResult>),
 
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
 
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onUnauthorized = default(Func<TResult>),
@@ -435,7 +435,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
@@ -469,7 +469,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
@@ -505,7 +505,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
@@ -518,7 +518,7 @@ namespace EastFive.Api.Tests
                 onBadRequest: onBadRequest,
                 onNotFound: onNotFound,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
-                onRedirect:onRedirect,
+                onRedirect: onRedirect,
                 onHtml: onHtml,
                 onCreated: onCreated,
                 onXls: onXls,
@@ -534,7 +534,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
@@ -563,7 +563,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
@@ -594,7 +594,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>),
             Func<TResult> onCreated = default(Func<TResult>),
             Func<byte[], string, TResult> onXls = default(Func<byte[], string, TResult>),
@@ -636,7 +636,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onExists = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<TResult> onNotImplemented = default(Func<TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
@@ -670,7 +670,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Delete,
@@ -701,7 +701,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.DeleteAsync(new[] { param1 },
@@ -722,7 +722,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onNotFound = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<Uri, string, TResult> onRedirect = default(Func<Uri, string, TResult>),
+            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<string, TResult> onHtml = default(Func<string, TResult>))
         {
             return application.DeleteAsync(new Expression<Action<TResource>>[] { },
@@ -1063,20 +1063,20 @@ namespace EastFive.Api.Tests
         }
 
         private static void RedirectResponse<TResource, TResult>(this ITestApplication application,
-            Func<Uri, string, TResult> onRedirect)
+            Func<Uri, TResult> onRedirect)
         {
             application.SetInstigator(
                 typeof(EastFive.Api.Controllers.RedirectResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
                     EastFive.Api.Controllers.RedirectResponse redirect =
-                        (where, why) =>
+                        (where) =>
                         {
                             if (onRedirect.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(
                                     typeof(EastFive.Api.Controllers.RedirectResponse),
                                     thisAgain, requestAgain, paramInfo, onSuccess);
-                            return new AttachedHttpResponseMessage<TResult>(onRedirect(where, why));
+                            return new AttachedHttpResponseMessage<TResult>(onRedirect(where));
                         };
                     return onSuccess(redirect);
                 });

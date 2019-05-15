@@ -1,16 +1,18 @@
-﻿using EastFive.Collections.Generic;
+﻿using EastFive.Api.Serialization;
+using EastFive.Collections.Generic;
 using EastFive.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EastFive.Api.Tests
 {
-    public class RestTestApplication : ITestApplication
+    public class RestTestApplication : ITestApplication, IApplication
     {
         private string authenticationToken;
 
@@ -148,6 +150,26 @@ namespace EastFive.Api.Tests
 
                 return response;
             }
+        }
+
+        public TResult GetControllerMethods<TResult>(string routeName, Func<IDictionary<HttpMethod, MethodInfo[]>, TResult> onMethodsIdentified, Func<TResult> onKeyNotFound)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TResult Bind<TResult>(Type type, IParseToken content, Func<object, TResult> onParsed, Func<string, TResult> onDidNotBind)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TResult> ParseContentValuesAsync<TParseResult, TResult>(HttpContent content, Func<ParseContentDelegate<TParseResult>, string[], Task<TResult>> onParsedContentValues)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, ParameterInfo methodParameter, Func<object, Task<HttpResponseMessage>> onInstigated)
+        {
+            throw new NotImplementedException();
         }
     }
 
