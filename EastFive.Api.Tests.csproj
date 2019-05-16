@@ -134,7 +134,7 @@
       <Project>{aec927ef-6aae-4533-bbf6-539643684002}</Project>
       <Name>EastFive.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\Josh\Repos\OrderOwl\\BlackBarLabs.SendGrid\BlackBarLabs.SendGrid\BlackBarLabs.SendGrid.csproj">
+    <ProjectReference Include="..\BlackBarLabs.SendGrid\BlackBarLabs.SendGrid\BlackBarLabs.SendGrid.csproj">
       <Project>{c6e444da-3991-43e3-a6c8-56db53670970}</Project>
       <Name>BlackBarLabs.SendGrid</Name>
     </ProjectReference>
