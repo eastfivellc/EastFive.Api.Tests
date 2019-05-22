@@ -635,6 +635,7 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest = default(Func<TResult>),
             Func<TResult> onExists = default(Func<TResult>),
             Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
+            Func<string, TResult> onFailure = default(Func<string,TResult>),
             Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
             Func<TResult> onNotImplemented = default(Func<TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
@@ -656,6 +657,7 @@ namespace EastFive.Api.Tests
                 onBadRequest: onBadRequest,
                 onExists: onExists,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
+                onFailure: onFailure,
                 onRedirect: onRedirect,
                 onNotImplemented: onNotImplemented,
                 onExecuteBackground: onExecuteBackground);
