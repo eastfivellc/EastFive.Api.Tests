@@ -18,7 +18,6 @@ namespace EastFive.Api.Tests
     [TestClass]
     public class UrlGeneration
     {
-        [TestCategory("CI")]
         [TestMethod]
         public void GenerateUrls()
         {
