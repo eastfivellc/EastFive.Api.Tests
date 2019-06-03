@@ -359,11 +359,11 @@ namespace BlackBarLabs.Api.Tests
             Func<TResult> callback)
         {
             var currentMailFetch = EastFive.Web.Services.ServiceConfiguration.SendMessageService;
-            var sendgridMailer = EastFive.SendGrid.SendGridMailer.Load(
-                mailer => mailer,
-                (why)=> throw new Exception(why));
-            EastFive.Web.Services.ServiceConfiguration.SendMessageService =
-                () => sendgridMailer;
+            //var sendgridMailer = EastFive.SendGrid.SendGridMailer.Load(
+            //    mailer => mailer,
+            //    (why)=> throw new Exception(why));
+            //EastFive.Web.Services.ServiceConfiguration.SendMessageService =
+            //    () => sendgridMailer;
 
             var result = callback();
             EastFive.Web.Services.ServiceConfiguration.SendMessageService = currentMailFetch;
