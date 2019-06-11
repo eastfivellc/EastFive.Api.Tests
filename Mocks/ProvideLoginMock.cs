@@ -314,7 +314,7 @@ namespace EastFive.Api.Tests
             if(authorizationRef.HasValue)
                 parameters.Add(ProvideLoginMock.extraParamState, authorizationRef.id.ToString());
 
-            return await EastFive.Azure.Auth.Redirection.ProcessRequestAsync(authentication,
+            return await EastFive.Azure.Auth.Redirection.ProcessRequestAsync(authentication, 
                     parameters,
                     application,
                     request, urlHelper,
