@@ -40,6 +40,8 @@ namespace EastFive.Api.Tests
             }
         }
 
+        public Uri ServerLocation => throw new NotImplementedException();
+
         public object CastResourceProperty(object value, Type propertyType)
         {
             throw new NotImplementedException();
@@ -168,6 +170,11 @@ namespace EastFive.Api.Tests
         }
 
         public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, ParameterInfo methodParameter, Func<object, Task<HttpResponseMessage>> onInstigated)
+        {
+            throw new NotImplementedException();
+        }
+
+        public RequestMessage<TResource> GetRequest<TResource>()
         {
             throw new NotImplementedException();
         }
