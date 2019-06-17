@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 
 using EastFive.Extensions;
 using EastFive;
+using EastFive.Azure.Functions;
 
 namespace EastFive.Api.Tests
 {
@@ -19,20 +20,31 @@ namespace EastFive.Api.Tests
     public class UrlGeneration
     {
         [TestMethod]
-        public void GenerateUrls()
+        public async Task GenerateUrls()
         {
             var httpApp = InvokeTestApplication.Init();
             var queryId = Guid.NewGuid();
+            var queryIdStr = queryId.ToString("N");
+
             var query = httpApp
                 .GetRequest<QueryableResource>()
-                .Where(qr => qr.queryableRef == queryId.AsRef<QueryableResource>())
+                .ById(queryId)
+                //.Where(qr => qr.queryableRef == queryId.AsRef<QueryableResource>())
+                .Where(qr => qr.text == "match")
+                .Where(qr => !qr.dtOptional.HasValue)
                 .Location();
+            Assert.AreEqual(
+                $"http://example.com/DefaultApi/MyQueryableResource/{queryIdStr}?string=match&dtOptional=null",
+                query.AbsoluteUri);
 
-            Assert.AreEqual($"http://example.com/api/QueryableResource/{queryId}", query.AbsoluteUri);
+            var invocationMessage = await httpApp
+                .GetRequest<QueryableResource>()
+                .Where(qr => qr.queryableRef == queryId.AsRef<QueryableResource>())
+                .FunctionAsync();
         }
 
         [FunctionViewController4(
-            Route = "QueryableResource",
+            Route = "MyQueryableResource",
             Resource = typeof(QueryableResource),
             ContentType = "x-application/queryableresource",
             ContentTypeVersion = "0.1")]
