@@ -23,9 +23,9 @@ namespace EastFive.Api.Tests
             get
             {
                 var routesApiCSV = EastFive.Web.Configuration.Settings.GetString(
-                    EastFive.Api.Tests.AppSettings.RoutesApi,
-                (routesApiFound) => routesApiFound,
-                (why) => "DefaultApi");
+                        EastFive.Api.Tests.AppSettings.RoutesApi,
+                    (routesApiFound) => routesApiFound,
+                    (why) => "DefaultApi");
 
                 var routesApi = routesApiCSV.Split(new[] { ',' }).ToArray();
                 return routesApi;
