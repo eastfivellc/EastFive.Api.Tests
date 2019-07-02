@@ -296,7 +296,7 @@ namespace EastFive.Api.Tests
 
         [HttpGet(MatchAllParameters = false)]
         public static async Task<HttpResponseMessage> Get(
-                [QueryParameter(Name = ProvideLoginMock.extraParamState)]IRefOptional<Authorization> authorizationRef,
+                [OptionalQueryParameter(Name = ProvideLoginMock.extraParamState)]IRefOptional<Authorization> authorizationRef,
                 [QueryParameter(Name = ProvideLoginMock.extraParamToken)]string token,
                 AzureApplication application, UrlHelper urlHelper,
                 HttpRequestMessage request,

@@ -18,6 +18,11 @@ namespace EastFive.Api.Tests
 {
     public class InvokeTestApplication : InvokeApplicationDirect
     {
+
+        public Session? SessionMaybe { get; private set; }
+
+        public Guid? AccountIdMaybe { get; private set; }
+
         public override string[] ApiRoutes
         {
             get
@@ -69,6 +74,118 @@ namespace EastFive.Api.Tests
             return new InvokeTestApplication(application, hostingLocation);
         }
 
+        public static async Task<InvokeTestApplication> InitUserAsync(
+            Func<Task<Guid>> setupAccountAsync)
+        {
+            var invocation = InvokeTestApplication.Init();
+            await invocation.LoginAsync(setupAccountAsync);
+            return invocation;
+        }
+
+        public async Task<Session> SessionAsync()
+        {
+            this.SessionMaybe = await this
+                .GetRequest<Session>()
+                .PostAsync(
+                        new Session
+                        {
+                            sessionId = Ref<Session>.NewRef(),
+                        },
+                    onCreatedBody: (sessionWithToken, contentType) => sessionWithToken);
+
+            this.Headers.Add(this.SessionMaybe.Value.HeaderName, this.SessionMaybe.Value.token);
+            return this.SessionMaybe.Value;
+        }
+
+        public async Task<Session> LoginAsync(
+            Func<Task<Guid>> setupAccountAsync)
+        {
+            #region Get mock login method
+
+            var accountId = Guid.Empty;
+
+            (this.AzureApplication as AzureApplication)
+                .AddOrUpdateInstantiation(typeof(ProvideLoginMock),
+                    (app) =>
+                    {
+                        var loginMock = new ProvideLoginAccountMock();
+                        loginMock.MapAccount =
+                            async (externalKey, extraParameters, authenticationInner, authorization,
+                                    baseUri, webApiApplication,
+                                onCreatedMapping,
+                                onAllowSelfServeAccounts,
+                                onInterceptProcess,
+                                onNoChange) =>
+                            {
+                                accountId = await setupAccountAsync();
+                                return onCreatedMapping(accountId);
+                            };
+                        return loginMock.AsTask<object>();
+                    });
+
+            var mockAuthenticationMethod = await this
+                .GetRequest<Method>()
+                .GetAsync(
+                    onContents:
+                        authentications =>
+                        {
+                            var matchingAuthentications = authentications
+                                .Where(auth => auth.name == ProvideLoginMock.IntegrationName);
+                            Assert.IsTrue(matchingAuthentications.Any());
+                            return matchingAuthentications.First();
+                        });
+
+            #endregion
+
+            #region Perform direct link as fastest method for account construction
+
+            var externalSystemUserId = Guid.NewGuid().ToString().Substring(0, 8);
+            var responseResource = ProvideLoginMock.GetResponse(externalSystemUserId);
+            var invocation = this;
+            this.SessionMaybe = await await this
+                .GetRequest<EastFive.Api.Tests.Redirection>()
+                .Where(externalSystemUserId)
+                .GetAsync(
+                    onRedirect:
+                        async (urlRedirect) =>
+                        {
+                            var authIdStr = urlRedirect.GetQueryParam(EastFive.Api.Azure.AzureApplication.QueryRequestIdentfier);
+                            var authId = Guid.Parse(authIdStr);
+                            var authIdRef = authId.AsRef<EastFive.Azure.Auth.Authorization>();
+
+                            // TODO: New comms here?
+                            return await await invocation
+                                .GetRequest<EastFive.Azure.Auth.Authorization>()
+                                .Where(auth => auth.authorizationRef == authIdRef)
+                                .GetAsync(
+                                    onContent:
+                                        (authenticatedAuthorization) =>
+                                        {
+                                            var session = new Session
+                                            {
+                                                sessionId = Guid.NewGuid().AsRef<Session>(),
+                                                authorization = authenticatedAuthorization.authorizationRef.Optional(),
+                                            };
+                                            return invocation.GetRequest<Session>()
+                                                .PostAsync(session,
+                                                    onCreatedBody:
+                                                        (updated, contentType) =>
+                                                        {
+                                                            return updated;
+                                                        });
+                                        });
+                        });
+
+            //Assert.AreEqual(accountId, authorizationToAthenticateSession.account.Value);
+
+            #endregion
+
+            this.Headers.Add(this.SessionMaybe.Value.HeaderName, this.SessionMaybe.Value.token);
+            this.AccountIdMaybe = this.SessionMaybe.Value.account;
+
+            return this.SessionMaybe.Value;
+        }
+
         protected override RequestMessage<TResource> BuildRequest<TResource>(
             IApplication application, HttpRequestMessage httpRequest)
         {
@@ -77,132 +194,6 @@ namespace EastFive.Api.Tests
                     AuthenticationHeaderValue(this.AuthorizationHeader);
             var request = base.BuildRequest<TResource>(application, httpRequest);
             return request;
-        }
-
-        public static Task<InvokeTestApplication> InitUserAsync(
-            Func<Task<Guid>> setupAccountAsync)
-        {
-            // var sessionFactory = new RestApplicationFactory();
-            var invocation = InvokeTestApplication.Init();
-            return InitUserAsync(invocation, setupAccountAsync);
-        }
-
-        protected static async Task<T> InitUserAsync<T>(
-            T invocation,
-            Func<Task<Guid>> setupAccountAsync)
-            where T : InvokeTestApplication
-        {
-            var loginAsync = await InitUnauthenticatedAsync(
-                Ref<Session>.NewRef(), invocation, setupAccountAsync);
-            await loginAsync();
-            return invocation;
-        }
-
-        protected static async Task<Func<Task>> InitUnauthenticatedAsync<T>(
-            IRef<Session> sessionRef,
-            T invocation,
-            Func<Task<Guid>> setupAccountAsync)
-            where T : IInvokeApplication
-        {
-            #region setup sessions
-
-            var sessionQuery = invocation
-                .GetRequest<Session>();
-            //invocation.AuthorizationHeader = await sessionQuery
-            //    .PostAsync(
-            //            new Session
-            //            {
-            //                sessionId = sessionRef,
-            //            },
-            //        onCreatedBody: (sessionWithToken, contentType) => sessionWithToken.token);
-
-            #endregion
-
-            Func<Task>  loginAsync =
-                async () =>
-                {
-
-                    #region Get mock login method
-
-                    var accountId = Guid.Empty;
-
-                    ((invocation as InvokeTestApplication).AzureApplication as AzureApplication)
-                        .AddOrUpdateInstantiation(typeof(ProvideLoginMock),
-                            async (app) =>
-                            {
-                                await 1.AsTask();
-                                var loginMock = new ProvideLoginAccountMock();
-                                loginMock.MapAccount =
-                                    async (externalKey, extraParameters, authenticationInner, authorization,
-                                        baseUri, webApiApplication,
-                                     onCreatedMapping,
-                                     onAllowSelfServeAccounts,
-                                     onInterceptProcess,
-                                     onNoChange) =>
-                                    {
-                                        accountId = await setupAccountAsync();
-                                        return onCreatedMapping(accountId);
-                                    };
-                                return loginMock;
-                            });
-
-                    var mockAuthenticationMethod = await invocation.GetRequest<Method>().GetAsync(
-                        onContents:
-                            authentications =>
-                            {
-                                var matchingAuthentications = authentications
-                                    .Where(auth => auth.name == ProvideLoginMock.IntegrationName);
-                                Assert.IsTrue(matchingAuthentications.Any());
-                                return matchingAuthentications.First();
-                            });
-
-                    #endregion
-
-                    #region perform direct link as fastest method for account construction
-
-                    var externalSystemUserId = Guid.NewGuid().ToString().Substring(0, 8);
-                    var responseResource = ProvideLoginMock.GetResponse(externalSystemUserId);
-                    var authorizationToAthenticateSession = await await invocation
-                        .GetRequest<EastFive.Api.Tests.Redirection>()
-                        .Where(externalSystemUserId)
-                        .GetAsync(
-                            onRedirect:
-                                async (urlRedirect) =>
-                                {
-                                    var authIdStr = urlRedirect.GetQueryParam(EastFive.Api.Azure.AzureApplication.QueryRequestIdentfier);
-                                    var authId = Guid.Parse(authIdStr);
-                                    var authIdRef = authId.AsRef<EastFive.Azure.Auth.Authorization>();
-
-                                    // TODO: New comms here?
-                                    return await await invocation
-                                                .GetRequest<EastFive.Azure.Auth.Authorization>()
-                                                .Where(auth => auth.authorizationRef == authIdRef)
-                                                .GetAsync(
-                                                    onContent:
-                                                        (authenticatedAuthorization) =>
-                                                        {
-                                                            var session = new Session
-                                                            {
-                                                                sessionId = Guid.NewGuid().AsRef<Session>(),
-                                                                authorization = authenticatedAuthorization.authorizationRef.Optional(),
-                                                            };
-                                                            return invocation.GetRequest<Session>()
-                                                                .PostAsync(session,
-                                                                    onCreatedBody:
-                                                                        (updated, contentType) =>
-                                                                        {
-                                                                            return updated;
-                                                                        });
-                                                        });
-                                });
-
-                    Assert.AreEqual(accountId, authorizationToAthenticateSession.account.Value);
-
-                    #endregion
-
-                };
-
-            return loginAsync;
         }
     }
 }
