@@ -40,7 +40,15 @@ namespace EastFive.Api.Tests
             }
         }
 
-        public Uri ServerLocation => throw new NotImplementedException();
+        public Uri ServerLocation => EastFive.Web.Configuration.Settings.GetUri(
+                        EastFive.Api.Tests.AppSettings.ServerUrl,
+                    (routesApiFound) => routesApiFound,
+                    (why) => throw new Exception(why));
+
+        public string ApiRouteName => EastFive.Web.Configuration.Settings.GetString(
+                        EastFive.Api.Tests.AppSettings.RoutesApi,
+                    (routesApiFound) => routesApiFound,
+                    (why) => "DefaultApi");
 
         public object CastResourceProperty(object value, Type propertyType)
         {

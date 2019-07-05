@@ -50,28 +50,27 @@ namespace EastFive.Api.Tests
             }
         }
 
-        protected override IApplication Application => AzureApplication;
-        public IApplication AzureApplication;
+        public AzureApplication AzureApplication;
 
-        protected InvokeTestApplication(IApplication application, Uri serverUrl)
-            : base(serverUrl)
+        protected InvokeTestApplication(AzureApplication application, Uri serverUrl, string apiRouteName)
+            : base(application, serverUrl, apiRouteName)
         {
             this.AzureApplication = application;
         }
 
         public static InvokeTestApplication Init()
         {
-            var application = new HttpApplication();
+            var application = new AzureApplication();
             return Init(application);
         }
 
-        public static InvokeTestApplication Init(HttpApplication application)
+        public static InvokeTestApplication Init(AzureApplication application)
         {
             var hostingLocation = Web.Configuration.Settings.GetUri(
                     AppSettings.ServerUrl,
                 (hostingLocationFound) => hostingLocationFound,
                 (whyUnspecifiedOrInvalid) => new Uri("http://example.com"));
-            return new InvokeTestApplication(application, hostingLocation);
+            return new InvokeTestApplication(application, hostingLocation, "api");
         }
 
         public static async Task<InvokeTestApplication> InitUserAsync(
@@ -104,7 +103,7 @@ namespace EastFive.Api.Tests
 
             var accountId = Guid.Empty;
 
-            (this.AzureApplication as AzureApplication)
+            this.AzureApplication
                 .AddOrUpdateInstantiation(typeof(ProvideLoginMock),
                     (app) =>
                     {
@@ -192,8 +191,8 @@ namespace EastFive.Api.Tests
             if (this.AuthorizationHeader.HasBlackSpace())
                 httpRequest.Headers.Authorization = new
                     AuthenticationHeaderValue(this.AuthorizationHeader);
-            var request = base.BuildRequest<TResource>(application, httpRequest);
-            return request;
+
+            return base.BuildRequest<TResource>(application, httpRequest);
         }
     }
 }
