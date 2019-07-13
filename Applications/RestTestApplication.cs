@@ -1,4 +1,5 @@
-﻿using EastFive.Api.Serialization;
+﻿using EastFive.Analytics;
+using EastFive.Api.Serialization;
 using EastFive.Collections.Generic;
 using EastFive.Extensions;
 using System;
@@ -49,6 +50,8 @@ namespace EastFive.Api.Tests
                         EastFive.Api.Tests.AppSettings.RoutesApi,
                     (routesApiFound) => routesApiFound,
                     (why) => "DefaultApi");
+
+        public ILogger Logger => throw new NotImplementedException();
 
         public object CastResourceProperty(object value, Type propertyType)
         {
