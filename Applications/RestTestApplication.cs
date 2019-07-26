@@ -165,7 +165,9 @@ namespace EastFive.Api.Tests
             }
         }
 
-        public TResult GetControllerMethods<TResult>(string routeName, Func<IDictionary<HttpMethod, MethodInfo[]>, TResult> onMethodsIdentified, Func<TResult> onKeyNotFound)
+        public TResult GetControllerType<TResult>(string routeName,
+            Func<Type, TResult> onMethodsIdentified,
+            Func<TResult> onKeyNotFound)
         {
             throw new NotImplementedException();
         }
