@@ -177,17 +177,18 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        public Task<TResult> ParseContentValuesAsync<TParseResult, TResult>(HttpContent content, Func<ParseContentDelegate<TParseResult>, string[], Task<TResult>> onParsedContentValues)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, ParameterInfo methodParameter, Func<object, Task<HttpResponseMessage>> onInstigated)
         {
             throw new NotImplementedException();
         }
 
         public RequestMessage<TResource> GetRequest<TResource>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TResult> ParseContentValuesAsync<TParseResult, TResult>(HttpContent content,
+            Func<ParseContentDelegateAsync<TParseResult>, string[], Task<TResult>> onParsedContentValues)
         {
             throw new NotImplementedException();
         }
