@@ -30,7 +30,7 @@ namespace EastFive.Api.Tests
 
         private Dictionary<string, string> credentials = new Dictionary<string, string>();
         private static Dictionary<string, string> tokens = new Dictionary<string, string>();
-        public static CredentialValidationMethodTypes method;
+        // public static CredentialValidationMethodTypes method;
         
         public const string extraParamToken = "token";
         public const string extraParamState = "state";

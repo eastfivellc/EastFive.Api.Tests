@@ -192,6 +192,11 @@ namespace EastFive.Api.Tests
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<MethodInfo> GetExtensionMethods(Type controllerType)
+        {
+            yield break;
+        }
     }
 
     public class ExecuteContext : Controllers.IExecuteAsync
