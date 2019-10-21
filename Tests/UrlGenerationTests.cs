@@ -34,7 +34,7 @@ namespace EastFive.Api.Tests
                 .Where(qr => !qr.dtOptional.HasValue)
                 .Location();
             Assert.AreEqual(
-                $"http://example.com/DefaultApi/MyQueryableResource/{queryIdStr}?string=match&dtOptional=null",
+                $"http://example.com/api/MyQueryableResource/{queryIdStr}?string=match&dtOptional=null",
                 query.AbsoluteUri);
 
             var invocationMessage = await httpApp
