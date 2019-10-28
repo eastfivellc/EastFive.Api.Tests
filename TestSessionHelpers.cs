@@ -27,10 +27,10 @@ namespace EastFive.Api.Tests
 
 
             session.AddOrUpdateInstantiation(
-                typeof(EastFive.Api.Controllers.ViewPathResolver),
+                typeof(EastFive.Api.ViewPathResolver),
                 (app) =>
                 {
-                    EastFive.Api.Controllers.ViewPathResolver callback =
+                    EastFive.Api.ViewPathResolver callback =
                         (viewName) =>
                         {
                             var loadedAssemblies = Assembly.GetAssembly(typeof(TestSessionHelpers));

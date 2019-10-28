@@ -818,14 +818,14 @@ namespace EastFive.Api.Tests
             Func<TResource, TResult> onContent)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.ContentResponse),
+                typeof(EastFive.Api.ContentResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.ContentResponse created =
+                    EastFive.Api.ContentResponse created =
                         (content, mimeType) =>
                         {
                             if (onContent.IsDefaultOrNull())
-                                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.ContentResponse), thisAgain, requestAgain, paramInfo, onSuccess);
+                                return FailureToOverride<TResource>(typeof(EastFive.Api.ContentResponse), thisAgain, requestAgain, paramInfo, onSuccess);
                             if (!(content is TResource))
                                 Assert.Fail($"Could not cast {content.GetType().FullName} to {typeof(TResource).FullName}.");
                             var resource = (TResource)content;
@@ -841,14 +841,14 @@ namespace EastFive.Api.Tests
             Func<string, TResult> onHtml)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.HtmlResponse),
+                typeof(EastFive.Api.HtmlResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.HtmlResponse created =
+                    EastFive.Api.HtmlResponse created =
                         (content) =>
                         {
                             if (onHtml.IsDefaultOrNull())
-                                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.HtmlResponse), thisAgain, requestAgain, paramInfo, onSuccess);
+                                return FailureToOverride<TResource>(typeof(EastFive.Api.HtmlResponse), thisAgain, requestAgain, paramInfo, onSuccess);
                             var result = onHtml(content);
                             return new AttachedHttpResponseMessage<TResult>(result);
                         };
@@ -860,14 +860,14 @@ namespace EastFive.Api.Tests
             Func<byte[], string, TResult> onXls)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.XlsxResponse),
+                typeof(EastFive.Api.XlsxResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.XlsxResponse created =
+                    EastFive.Api.XlsxResponse created =
                         (content, name) =>
                         {
                             if (onXls.IsDefaultOrNull())
-                                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.XlsxResponse), thisAgain, requestAgain, paramInfo, onSuccess);
+                                return FailureToOverride<TResource>(typeof(EastFive.Api.XlsxResponse), thisAgain, requestAgain, paramInfo, onSuccess);
                             var result = onXls(content, name);
                             return new AttachedHttpResponseMessage<TResult>(result);
                         };
@@ -1024,7 +1024,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreated)
         {
             application.SetInstigatorGeneric(
-                typeof(EastFive.Api.Controllers.ContentTypeResponse<>),
+                typeof(EastFive.Api.ContentTypeResponse<>),
                 (type, httpApp, request, paramInfo, onSuccess) =>
                 {
                     type = typeof(ContentTypeResponse<>).MakeGenericType(typeof(TResource));
@@ -1129,10 +1129,10 @@ namespace EastFive.Api.Tests
             Func<TResource[], TResult> onContents)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
+                typeof(EastFive.Api.MultipartAcceptArrayResponseAsync),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync created =
+                    EastFive.Api.MultipartAcceptArrayResponseAsync created =
                         (contents) =>
                         {
                             var resources = contents.Cast<TResource>().ToArray();
@@ -1142,7 +1142,7 @@ namespace EastFive.Api.Tests
 
                             if (onContents.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(
-                                    typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync), 
+                                    typeof(EastFive.Api.MultipartAcceptArrayResponseAsync), 
                                     thisAgain, requestAgain, paramInfo, onSuccess).AsTask();
                             var result = onContents(resources);
                             return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
@@ -1151,7 +1151,7 @@ namespace EastFive.Api.Tests
                 });
 
             application.SetInstigatorGeneric(
-                typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
+                typeof(EastFive.Api.MultipartResponseAsync<>),
                 (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
                     var callbackWrapperType = typeof(CallbackWrapper<,>).MakeGenericType(
@@ -1180,10 +1180,10 @@ namespace EastFive.Api.Tests
             Func<object[], TResult> onContents)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
+                typeof(EastFive.Api.MultipartAcceptArrayResponseAsync),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync created =
+                    EastFive.Api.MultipartAcceptArrayResponseAsync created =
                         (contents) =>
                         {
                             var resources = contents.ToArray();
@@ -1193,7 +1193,7 @@ namespace EastFive.Api.Tests
 
                             if (onContents.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(
-                                    typeof(EastFive.Api.Controllers.MultipartAcceptArrayResponseAsync),
+                                    typeof(EastFive.Api.MultipartAcceptArrayResponseAsync),
                                     thisAgain, requestAgain, paramInfo, onSuccess).AsTask();
                             var result = onContents(resources);
                             return new AttachedHttpResponseMessage<TResult>(result).ToTask<HttpResponseMessage>();
@@ -1202,7 +1202,7 @@ namespace EastFive.Api.Tests
                 });
 
             application.SetInstigatorGeneric(
-                typeof(EastFive.Api.Controllers.MultipartResponseAsync<>),
+                typeof(EastFive.Api.MultipartResponseAsync<>),
                 (type, thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
                     var callbackWrapperInstance = typeof(CallbackWrapper<,>).MakeGenericType(
@@ -1252,7 +1252,7 @@ namespace EastFive.Api.Tests
                     var result = callbackObjs(resourcesArray.Cast<object>().ToArray());
                     return new AttachedHttpResponseMessage<TResult>(result);
                 }
-                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.MultipartResponseAsync<>), 
+                return FailureToOverride<TResource>(typeof(EastFive.Api.MultipartResponseAsync<>), 
                     thisAgain, requestAgain, paramInfo, onSuccess);
             }
             
