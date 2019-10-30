@@ -118,21 +118,6 @@ namespace BlackBarLabs.Api.Tests
 
         #region Methods
 
-        public async Task CreateSessionAsync(Dictionary<string, string> credentialToken)
-        {
-            throw new NotImplementedException();
-            //var response = this.PostAsync<SessionController>(
-            //    new EastFive.Api.Azure.Credentials.Resources.Session
-            //    {
-            //        Id = this.Id,
-            //        Method = CredentialValidationMethodTypes.Password.ToString(),
-            //        ResponseToken = credentialToken,
-            //    });
-            //var sessionFromAuth = await response.GetContentAsync<Session>(
-            //    System.Net.HttpStatusCode.Created);
-            //Assert.AreEqual(this.Id, sessionFromAuth.AuthorizationId);
-            //this.Headers.Add("Authorization", sessionFromAuth.Token);
-        }
 
         public async Task<HttpResponseMessage> PostAsync<TController>(object resource,
                 Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))

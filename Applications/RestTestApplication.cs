@@ -2,6 +2,7 @@
 using EastFive.Api.Serialization;
 using EastFive.Collections.Generic;
 using EastFive.Extensions;
+using Microsoft.ApplicationInsights.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,9 +64,9 @@ namespace EastFive.Api.Tests
 
         public void SetInstigator(Type type, InstigatorDelegate instigator, bool clear = false)
         {
-            if(type.ContainsCustomAttribute<HttpActionDelegateAttribute>())
+            if(type.ContainsCustomAttribute<HttpDelegateAttribute>())
             {
-                var actionDelAttr = type.GetCustomAttribute<HttpActionDelegateAttribute>();
+                var actionDelAttr = type.GetCustomAttribute<HttpDelegateAttribute>();
                 var code = actionDelAttr.StatusCode;
 
                 if (!clear)
@@ -85,9 +86,9 @@ namespace EastFive.Api.Tests
         public void SetInstigatorGeneric(Type type, InstigatorDelegateGeneric instigator,
             bool clear = false)
         {
-            if (type.ContainsCustomAttribute<HttpActionDelegateAttribute>())
+            if (type.ContainsCustomAttribute<HttpDelegateAttribute>())
             {
-                var actionDelAttr = type.GetCustomAttribute<HttpActionDelegateAttribute>();
+                var actionDelAttr = type.GetCustomAttribute<HttpDelegateAttribute>();
                 var code = actionDelAttr.StatusCode;
                 if (!clear)
                 {
@@ -135,7 +136,7 @@ namespace EastFive.Api.Tests
                         async (data) =>
                         {
                             var dataType = data.GetType();
-                            if (dataType.IsSubClassOfGeneric(typeof(Controllers.CreatedBodyResponse<>)))
+                            if (dataType.IsSubClassOfGeneric(typeof(CreatedBodyResponse<>)))
                             {
                                 var jsonString = await response.Content.ReadAsStringAsync();
                                 var resourceType = dataType.GenericTypeArguments.First();
@@ -146,7 +147,7 @@ namespace EastFive.Api.Tests
                                     instance, response.Content.Headers.ContentType.MediaType);
                                 return (HttpResponseMessage)responseDelegate;
                             }
-                            if (dataType.IsSubClassOfGeneric(typeof(Controllers.ExecuteBackgroundResponseAsync)))
+                            if (dataType.IsSubClassOfGeneric(typeof(ExecuteBackgroundResponseAsync)))
                             {
                                 //var jsonString = await response.Headers.();
                                 //var resourceType = dataType.GenericTypeArguments.First();
@@ -177,7 +178,10 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, ParameterInfo methodParameter, Func<object, Task<HttpResponseMessage>> onInstigated)
+        public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, 
+            ParameterInfo methodParameter,
+            RequestTelemetry telemetry,
+            Func<object, Task<HttpResponseMessage>> onInstigated)
         {
             throw new NotImplementedException();
         }
@@ -199,7 +203,7 @@ namespace EastFive.Api.Tests
         }
     }
 
-    public class ExecuteContext : Controllers.IExecuteAsync
+    public class ExecuteContext : IExecuteAsync
     {
         public bool ForceBackground => false;
 

@@ -879,14 +879,14 @@ namespace EastFive.Api.Tests
             Func<TResult> onBadRequest)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.BadRequestResponse),
+                typeof(BadRequestResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.BadRequestResponse badRequest =
+                    BadRequestResponse badRequest =
                         () =>
                         {
                             if (onBadRequest.IsDefaultOrNull())
-                                return FailureToOverride<TResource>(typeof(EastFive.Api.Controllers.BadRequestResponse), thisAgain, requestAgain, paramInfo, onSuccess);
+                                return FailureToOverride<TResource>(typeof(BadRequestResponse), thisAgain, requestAgain, paramInfo, onSuccess);
                             var result = onBadRequest();
                             return new AttachedHttpResponseMessage<TResult>(result);
                         };
@@ -1000,7 +1000,7 @@ namespace EastFive.Api.Tests
             Func<TResource, string, TResult> onCreated)
         {
             application.SetInstigatorGeneric(
-                typeof(EastFive.Api.Controllers.CreatedBodyResponse<>),
+                typeof(CreatedBodyResponse<>),
                 (type, httpApp, request, paramInfo, onSuccess) =>
                 {
                     type = typeof(CreatedBodyResponse<>).MakeGenericType(typeof(TResource));
@@ -1046,15 +1046,15 @@ namespace EastFive.Api.Tests
             Func<TResult> onCreated)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.CreatedResponse),
+                typeof(CreatedResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.CreatedResponse created =
+                    CreatedResponse created =
                         () =>
                         {
                             if (onCreated.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(
-                                    typeof(EastFive.Api.Controllers.CreatedResponse),
+                                    typeof(CreatedResponse),
                                     thisAgain, requestAgain, paramInfo, onSuccess);
                             return new AttachedHttpResponseMessage<TResult>(onCreated());
                         };
@@ -1067,15 +1067,15 @@ namespace EastFive.Api.Tests
             Func<Uri, TResult> onRedirect)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.RedirectResponse),
+                typeof(RedirectResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.RedirectResponse redirect =
+                    RedirectResponse redirect =
                         (where) =>
                         {
                             if (onRedirect.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(
-                                    typeof(EastFive.Api.Controllers.RedirectResponse),
+                                    typeof(RedirectResponse),
                                     thisAgain, requestAgain, paramInfo, onSuccess);
                             return new AttachedHttpResponseMessage<TResult>(onRedirect(where));
                         };
@@ -1088,15 +1088,15 @@ namespace EastFive.Api.Tests
         {
             if (!onAlreadyExists.IsDefaultOrNull())
                 application.SetInstigator(
-                    typeof(EastFive.Api.Controllers.AlreadyExistsResponse),
+                    typeof(AlreadyExistsResponse),
                     (thisAgain, requestAgain, paramInfo, onSuccess) =>
                     {
-                        EastFive.Api.Controllers.AlreadyExistsResponse exists =
+                        AlreadyExistsResponse exists =
                             () =>
                             {
                                 if (onAlreadyExists.IsDefaultOrNull())
                                     return FailureToOverride<TResource>(
-                                        typeof(EastFive.Api.Controllers.AlreadyExistsResponse),
+                                        typeof(AlreadyExistsResponse),
                                         thisAgain, requestAgain, paramInfo, onSuccess);
                                 return new AttachedHttpResponseMessage<TResult>(onAlreadyExists());
                             };
@@ -1109,15 +1109,15 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotImplemented)
         {
             application.SetInstigator(
-                typeof(EastFive.Api.Controllers.NotImplementedResponse),
+                typeof(NotImplementedResponse),
                 (thisAgain, requestAgain, paramInfo, onSuccess) =>
                 {
-                    EastFive.Api.Controllers.NotImplementedResponse notImplemented =
+                    NotImplementedResponse notImplemented =
                         () =>
                         {
                             if (onNotImplemented.IsDefaultOrNull())
                                 return FailureToOverride<TResource>(
-                                    typeof(EastFive.Api.Controllers.NotImplementedResponse),
+                                    typeof(NotImplementedResponse),
                                     thisAgain, requestAgain, paramInfo, onSuccess);
                             return new AttachedHttpResponseMessage<TResult>(onNotImplemented());
                         };
