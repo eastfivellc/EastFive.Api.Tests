@@ -37,10 +37,10 @@ namespace EastFive.Api.Tests
                 $"http://example.com/api/MyQueryableResource/{queryIdStr}?string=match&dtOptional=null",
                 query.AbsoluteUri);
 
-            var invocationMessage = await httpApp
-                .GetRequest<QueryableResource>()
-                .Where(qr => qr.queryableRef == queryId.AsRef<QueryableResource>())
-                .FunctionAsync();
+            //var invocationMessage = await httpApp
+            //    .GetRequest<QueryableResource>()
+            //    .Where(qr => qr.queryableRef == queryId.AsRef<QueryableResource>())
+            //    .FunctionAsync();
         }
 
         [FunctionViewController4(
