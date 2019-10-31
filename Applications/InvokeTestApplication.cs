@@ -186,13 +186,13 @@ namespace EastFive.Api.Tests
         }
 
         protected override RequestMessage<TResource> BuildRequest<TResource>(
-            IApplication application, HttpRequestMessage httpRequest)
+            IApplication application)
         {
-            if (this.AuthorizationHeader.HasBlackSpace())
-                httpRequest.Headers.Authorization = new
-                    AuthenticationHeaderValue(this.AuthorizationHeader);
+            //if (this.AuthorizationHeader.HasBlackSpace())
+            //    httpRequest.Headers.Authorization = new
+            //        AuthenticationHeaderValue(this.AuthorizationHeader);
 
-            return base.BuildRequest<TResource>(application, httpRequest);
+            return base.BuildRequest<TResource>(application);
         }
     }
 }
