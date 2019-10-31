@@ -180,7 +180,6 @@ namespace EastFive.Api.Tests
 
         public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, 
             ParameterInfo methodParameter,
-            RequestTelemetry telemetry,
             Func<object, Task<HttpResponseMessage>> onInstigated)
         {
             throw new NotImplementedException();
