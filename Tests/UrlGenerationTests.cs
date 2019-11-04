@@ -20,7 +20,7 @@ namespace EastFive.Api.Tests
     public class UrlGeneration
     {
         [TestMethod]
-        public async Task GenerateUrls()
+        public async void GenerateUrls()
         {
             var httpApp = InvokeTestApplication.Init();
             var queryId = Guid.NewGuid();
