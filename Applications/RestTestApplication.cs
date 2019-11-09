@@ -189,12 +189,6 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        public Task<TResult> ParseContentValuesAsync<TParseResult, TResult>(HttpContent content,
-            Func<ParseContentDelegateAsync<TParseResult>, string[], Task<TResult>> onParsedContentValues)
-        {
-            throw new NotImplementedException();
-        }
-
         public IEnumerable<MethodInfo> GetExtensionMethods(Type controllerType)
         {
             yield break;

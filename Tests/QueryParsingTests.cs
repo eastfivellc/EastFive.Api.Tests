@@ -1,4 +1,5 @@
-﻿using BlackBarLabs.Api.Tests.Examples;
+﻿using BlackBarLabs.Api;
+using BlackBarLabs.Api.Tests.Examples;
 using BlackBarLabs.Extensions;
 using EastFive;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http.Routing;
 
-namespace BlackBarLabs.Api.Tests.Tests
+namespace EastFive.Api.Tests.Tests
 {
     [TestClass]
     public class QueryParsingTests

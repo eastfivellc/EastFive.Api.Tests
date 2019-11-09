@@ -135,6 +135,7 @@
     <Compile Include="Helpers\TestSessionHelpers.cs" />
     <Compile Include="Testing\AssertApi.cs" />
     <Compile Include="TestSessionHelpers.cs" />
+    <Compile Include="Tests\AccessTokenTests.cs" />
     <Compile Include="Tests\UrlGenerationTests.cs" />
     <Compile Include="Tests\QueryParsingTests.cs" />
   </ItemGroup>
