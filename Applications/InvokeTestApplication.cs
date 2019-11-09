@@ -52,8 +52,8 @@ namespace EastFive.Api.Tests
 
         public AzureApplication AzureApplication;
 
-        protected InvokeTestApplication(AzureApplication application, Uri serverUrl, string apiRouteName)
-            : base(application, serverUrl, apiRouteName)
+        protected InvokeTestApplication(AzureApplication application, Uri serverUrl, string apiRouteName, CancellationToken token)
+            : base(application, serverUrl, apiRouteName, token)
         {
             this.AzureApplication = application;
         }
@@ -70,7 +70,7 @@ namespace EastFive.Api.Tests
                     AppSettings.ServerUrl,
                 (hostingLocationFound) => hostingLocationFound,
                 (whyUnspecifiedOrInvalid) => new Uri("http://example.com"));
-            return new InvokeTestApplication(application, hostingLocation, "api");
+            return new InvokeTestApplication(application, hostingLocation, "api", default);
         }
 
         public static async Task<InvokeTestApplication> InitUserAsync(

@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EastFive.Api.Tests
@@ -177,7 +178,7 @@ namespace EastFive.Api.Tests
             throw new NotImplementedException();
         }
 
-        public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, 
+        public Task<HttpResponseMessage> Instigate(HttpRequestMessage request, CancellationToken token,
             ParameterInfo methodParameter,
             Func<object, Task<HttpResponseMessage>> onInstigated)
         {
