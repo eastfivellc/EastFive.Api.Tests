@@ -61,16 +61,17 @@ namespace EastFive.Api.Tests
         public static InvokeTestApplication Init()
         {
             var application = new AzureApplication();
-            return Init(application);
+            var tokenSource = new CancellationTokenSource();
+            return Init(application, tokenSource.Token);
         }
 
-        public static InvokeTestApplication Init(AzureApplication application)
+        public static InvokeTestApplication Init(AzureApplication application, CancellationToken token)
         {
             var hostingLocation = Web.Configuration.Settings.GetUri(
                     AppSettings.ServerUrl,
                 (hostingLocationFound) => hostingLocationFound,
                 (whyUnspecifiedOrInvalid) => new Uri("http://example.com"));
-            return new InvokeTestApplication(application, hostingLocation, "api", default);
+            return new InvokeTestApplication(application, hostingLocation, "api", token);
         }
 
         public static async Task<InvokeTestApplication> InitUserAsync(
