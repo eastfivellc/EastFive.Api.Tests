@@ -54,6 +54,8 @@ namespace EastFive.Api.Tests
 
         public ILogger Logger => throw new NotImplementedException();
 
+        public IApplication Application => this;
+
         public object CastResourceProperty(object value, Type propertyType)
         {
             throw new NotImplementedException();
@@ -187,12 +189,19 @@ namespace EastFive.Api.Tests
 
         public RequestMessage<TResource> GetRequest<TResource>()
         {
-            throw new NotImplementedException();
+            return new RequestMessage<TResource>(this);
         }
 
         public IEnumerable<MethodInfo> GetExtensionMethods(Type controllerType)
         {
             yield break;
+        }
+
+        public HttpRequestMessage GetHttpRequest()
+        {
+            var httpRequestMessage = new HttpRequestMessage();
+            httpRequestMessage.RequestUri = this.ServerLocation;
+            return httpRequestMessage;
         }
     }
 

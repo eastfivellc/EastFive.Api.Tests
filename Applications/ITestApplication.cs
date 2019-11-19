@@ -8,11 +8,9 @@ using static EastFive.Api.HttpApplication;
 
 namespace EastFive.Api.Tests
 {
-    public interface ITestApplication
+    public interface ITestApplication : IInvokeApplication
     {
         IDictionary<string, string> Headers { get; }
-
-        Task<HttpResponseMessage> SendAsync(HttpRequestMessage request);
 
         object CastResourceProperty(object value, Type propertyType);
 
