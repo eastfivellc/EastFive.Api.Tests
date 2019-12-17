@@ -279,7 +279,7 @@ namespace EastFive.Api.Tests
         }
     }
 
-    [FunctionViewController4(
+    [FunctionViewController6(
         Route = "MockRedirection",
         Resource = typeof(Redirection),
         ContentType = "x-application/auth-redirection.mock",

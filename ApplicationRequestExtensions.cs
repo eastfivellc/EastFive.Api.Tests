@@ -25,6 +25,7 @@ using EastFive.Linq.Expressions;
 using BlackBarLabs.Extensions;
 using BlackBarLabs.Api;
 using EastFive.Linq.Async;
+using System.Net.Http.Headers;
 
 namespace EastFive.Api.Tests
 {
@@ -640,27 +641,39 @@ namespace EastFive.Api.Tests
             Func<TResult> onNotImplemented = default(Func<TResult>),
             Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
         {
-            return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
-                (request) =>
-                {
-                    var contentJsonString = JsonConvert.SerializeObject(resource, new Serialization.Converter());
-                    request.Content = new StreamContent(contentJsonString.ToStream());
-                    request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-                    return request;
-                },
-                (TResult result) =>
-                {
-                    return result;
-                },
+            return application.GetRequest<TResource>().PostAsync(
+                    resource,//  headers: application.Headers.ToArray(),
                 onCreated: onCreated,
                 onCreatedBody: onCreatedBody,
                 onBadRequest: onBadRequest,
                 onExists: onExists,
                 onRefDoesNotExistsType: onRefDoesNotExistsType,
-                onFailure: onFailure,
                 onRedirect: onRedirect,
+                onFailure: onFailure,
                 onNotImplemented: onNotImplemented,
                 onExecuteBackground: onExecuteBackground);
+
+            //return application.MethodAsync<TResource, TResult, TResult>(HttpMethod.Post,
+            //    (request) =>
+            //    {
+            //        var contentJsonString = JsonConvert.SerializeObject(resource, new Serialization.Converter());
+            //        request.Content = new StreamContent(contentJsonString.ToStream());
+            //        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            //        return request;
+            //    },
+            //    (TResult result) =>
+            //    {
+            //        return result;
+            //    },
+            //    onCreated: onCreated,
+            //    onCreatedBody: onCreatedBody,
+            //    onBadRequest: onBadRequest,
+            //    onExists: onExists,
+            //    onRefDoesNotExistsType: onRefDoesNotExistsType,
+            //    onFailure: onFailure,
+            //    onRedirect: onRedirect,
+            //    onNotImplemented: onNotImplemented,
+            //    onExecuteBackground: onExecuteBackground);
         }
 
         private static Task<TResult> DeleteAsync<TResource, TResult>(this ITestApplication application,
