@@ -180,7 +180,7 @@ namespace BlackBarLabs.Api.Tests
                 (actorIdClaimType) =>
                 {
                     claims.AddOrReplace(actorIdClaimType, actorId.ToString());
-                    var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
+                    var token = EastFive.Api.Auth.JwtTools.CreateToken(Guid.NewGuid(), actorId,
                         new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                         (tokenNew) => tokenNew,
                         (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
@@ -198,7 +198,7 @@ namespace BlackBarLabs.Api.Tests
         {
             var actorIdClaimType = ConfigurationManager.AppSettings[EastFive.Api.AppSettings.ActorIdClaimType];
             claims.AddOrReplace(actorIdClaimType, actorId.ToString());
-            var token = BlackBarLabs.Security.Tokens.JwtTools.CreateToken(Guid.NewGuid(), actorId,
+            var token = EastFive.Api.Auth.JwtTools.CreateToken(Guid.NewGuid(), actorId,
                 new Uri("http://test.example.com"), TimeSpan.FromHours(1.0), claims,
                 (tokenNew) => tokenNew,
                 (missingConfig) => { Assert.Fail(missingConfig); return string.Empty; },
