@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Routing;
+using Microsoft.AspNetCore.Mvc.Routing;
 using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -54,42 +54,42 @@ namespace EastFive.Api.Tests
 
             var httpRequest = new HttpRequestMessage(); // $"{hostingLocation}/{routesApi[0]}/{functionViewControllerAttribute.Route}");
             httpRequest.Method = method;
-            var config = new HttpConfiguration();
+            //var config = new HttpConfiguration();
 
-            var firstApiRoute = routesApi.Select(
-                routeName =>
-                {
-                    var route = config.Routes.MapHttpRoute(
-                        name: routeName,
-                        routeTemplate: routeName + "/{controller}/{id}",
-                        defaults: new { id = RouteParameter.Optional }
-                    );
-                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
-                    return route;
-                }).First();
+            //var firstApiRoute = routesApi.Select(
+            //    routeName =>
+            //    {
+            //        var route = config.Routes.MapHttpRoute(
+            //            name: routeName,
+            //            routeTemplate: routeName + "/{controller}/{id}",
+            //            defaults: new { id = RouteParameter.Optional }
+            //        );
+            //        httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+            //        return route;
+            //    }).First();
 
-            IHttpRoute[] mvcRoutes = routesMvcCSV.Split(new[] { ',' }).Select(
-                routeName =>
-                {
-                    var route = config.Routes.MapHttpRoute(
-                        name: routeName,
-                        routeTemplate: "{controller}/{action}/{id}",
-                        defaults: new { controller = "Default", action = "Index", id = "" }
-                        );
-                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
-                    return route;
-                }).ToArray();
+            //IHttpRoute[] mvcRoutes = routesMvcCSV.Split(new[] { ',' }).Select(
+            //    routeName =>
+            //    {
+            //        var route = config.Routes.MapHttpRoute(
+            //            name: routeName,
+            //            routeTemplate: "{controller}/{action}/{id}",
+            //            defaults: new { controller = "Default", action = "Index", id = "" }
+            //            );
+            //        httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+            //        return route;
+            //    }).ToArray();
 
-            var urlTemplate = $"{hostingLocation}/{firstApiRoute.RouteTemplate}";
-            //var routeValues = firstApiRoute.Defaults.SelectValues().Append(functionViewControllerAttribute.Route).Reverse().ToArray();
-            var requestUriString = // String.Format( urlTemplate, routeValues);
-                urlTemplate
-                    .Replace("{controller}", functionViewControllerAttribute.Route)
-                    .Replace("/{id}", string.Empty);
+            //var urlTemplate = $"{hostingLocation}/{firstApiRoute.RouteTemplate}";
+            ////var routeValues = firstApiRoute.Defaults.SelectValues().Append(functionViewControllerAttribute.Route).Reverse().ToArray();
+            //var requestUriString = // String.Format( urlTemplate, routeValues);
+            //    urlTemplate
+            //        .Replace("{controller}", functionViewControllerAttribute.Route)
+            //        .Replace("/{id}", string.Empty);
 
-            httpRequest.RequestUri = new Uri(requestUriString);
+            //httpRequest.RequestUri = new Uri(requestUriString);
 
-            httpRequest.SetConfiguration(config);
+            //httpRequest.SetConfiguration(config);
 
             foreach (var headerKVP in application.Headers)
                 httpRequest.Headers.Add(headerKVP.Key, headerKVP.Value);
@@ -101,11 +101,11 @@ namespace EastFive.Api.Tests
         {
             var httpRequest = new HttpRequestMessage(); // $"{hostingLocation}/{routesApi[0]}/{functionViewControllerAttribute.Route}");
             httpRequest.Method = method;
-            var config = new HttpConfiguration();
+            //var config = new HttpConfiguration();
 
-            httpRequest.RequestUri = location;
+            //httpRequest.RequestUri = location;
 
-            httpRequest.SetConfiguration(config);
+            //httpRequest.SetConfiguration(config);
 
             foreach (var headerKVP in application.Headers)
                 httpRequest.Headers.Add(headerKVP.Key, headerKVP.Value);

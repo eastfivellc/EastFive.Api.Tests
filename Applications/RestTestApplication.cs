@@ -197,11 +197,16 @@ namespace EastFive.Api.Tests
             yield break;
         }
 
-        public HttpRequestMessage GetHttpRequest()
+        public IHttpRequest GetHttpRequest()
         {
-            var httpRequestMessage = new HttpRequestMessage();
+            var httpRequestMessage = new HttpRequest();
             httpRequestMessage.RequestUri = this.ServerLocation;
             return httpRequestMessage;
+        }
+
+        public TResult DoesStoreMonitoring<TResult>(Func<StoreMonitoringDelegate, TResult> onMonitorUsingThisCallback, Func<TResult> onNoMonitoring)
+        {
+            throw new NotImplementedException();
         }
     }
 

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BlackBarLabs.Linq;
 using EastFive.Security.SessionServer;
 using System.Net.Http;
 using System.Security.Claims;
@@ -11,9 +10,11 @@ using EastFive.Api.Azure.Credentials;
 using EastFive.Serialization;
 using EastFive.Api.Azure;
 using EastFive.Api.Controllers;
-using System.Web.Http.Routing;
-using BlackBarLabs.Api;
+
+using Microsoft.AspNetCore.Mvc.Routing;
+
 using Newtonsoft.Json;
+
 using EastFive.Azure.Auth;
 using EastFive.Extensions;
 using EastFive.Reflection;
