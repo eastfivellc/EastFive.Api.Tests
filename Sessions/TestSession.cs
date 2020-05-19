@@ -9,18 +9,17 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using EastFive.Api.Services;
 using System.Configuration;
 using System.Net.Http.Headers;
+
 using EastFive.Web.Services;
 using EastFive.Collections.Generic;
 using EastFive.Extensions;
 using EastFive.Linq;
-using Microsoft.AspNetCore.Mvc.Routing;
-using EastFive.Api.Azure.Credentials.Controllers;
 using EastFive.Api.Azure.Credentials;
 using EastFive.Api.Azure.Credentials.Resources;
 using EastFive.Web;
+using EastFive.Api;
 
 namespace BlackBarLabs.Api.Tests
 {
@@ -119,9 +118,8 @@ namespace BlackBarLabs.Api.Tests
         #region Methods
 
 
-        public async Task<HttpResponseMessage> PostAsync<TController>(object resource,
-                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
-            where TController : ApiController
+        public async Task<IHttpResponse> PostAsync<TController>(object resource,
+                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>))
         {
             var controller = GetController<TController>();
             return await InvokeControllerAsync(controller, HttpMethod.Post,
@@ -132,8 +130,7 @@ namespace BlackBarLabs.Api.Tests
                 });
         }
 
-        public async Task<HttpResponseMessage> PostMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
-            where TController : ApiController
+        public async Task<IHttpResponse> PostMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
         {
             var controller = GetController<TController>();
             var response = await InvokeControllerAsync(controller, HttpMethod.Post,
@@ -146,9 +143,8 @@ namespace BlackBarLabs.Api.Tests
             return response;
         }
 
-        public async Task<HttpResponseMessage> PutAsync<TController>(object resource,
-                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
-            where TController : ApiController
+        public async Task<IHttpResponse> PutAsync<TController>(object resource,
+                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>))
         {
             var controller = GetController<TController>();
             return await InvokeControllerAsync(controller, HttpMethod.Put,
@@ -158,8 +154,7 @@ namespace BlackBarLabs.Api.Tests
                 });
         }
 
-        public async Task<HttpResponseMessage> PutMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
-            where TController : ApiController
+        public async Task<IHttpResponse> PutMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
         {
             var controller = GetController<TController>();
             var response = await InvokeControllerAsync(controller, HttpMethod.Put,
@@ -207,17 +202,15 @@ namespace BlackBarLabs.Api.Tests
         }
 
         public async Task<TResult> GetAsync<TController, TResult>(
-                Func<HttpResponseMessage, TResult> callback)
-            where TController : ApiController
+                Func<IHttpResponse, TResult> callback)
         {
             var controller = GetController<TController>();
             var response = await InvokeControllerAsync(controller, HttpMethod.Get);
             return callback(response);
         }
 
-        public async Task<HttpResponseMessage> GetAsync<TController>(object resource,
-                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
-            where TController : ApiController
+        public async Task<IHttpResponse> GetAsync<TController>(object resource,
+                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>))
         {
             var controller = GetController<TController>();
             return await InvokeControllerAsync(controller, HttpMethod.Get,
@@ -231,8 +224,7 @@ namespace BlackBarLabs.Api.Tests
         }
 
         public async Task<TResult> GetAsync<TController, TResult>(object resource,
-                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
-            where TController : ApiController
+                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>))
         {
             var response = await this.GetAsync<TController>(resource, mutateRequest);
             response.Assert(System.Net.HttpStatusCode.OK);
@@ -242,16 +234,14 @@ namespace BlackBarLabs.Api.Tests
 
         public async Task<TResult> GetAsync<TController, TResult>(object resource,
                 HttpActionDelegate<object, TResult> callback)
-            where TController : ApiController
         {
             var response = await this.GetAsync<TController>(resource);
             var results = callback(response, resource);
             return results;
         }
         
-        public async Task<HttpResponseMessage> DeleteAsync<TController>(object resource,
-                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
-            where TController : ApiController
+        public async Task<IHttpResponse> DeleteAsync<TController>(object resource,
+                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>))
         {
             var controller = GetController<TController>();
             return await InvokeControllerAsync(controller, HttpMethod.Delete,
@@ -262,8 +252,7 @@ namespace BlackBarLabs.Api.Tests
         }
 
         public async Task<TResult> OptionsAsync<TController, TResult>(
-                Func<HttpResponseMessage, HttpMethod[], TResult> callback)
-            where TController : ApiController
+                Func<IHttpResponse, HttpMethod[], TResult> callback)
         {
             var controller = GetController<TController>();
             var response = await InvokeControllerAsync(controller, HttpMethod.Options,
@@ -277,8 +266,7 @@ namespace BlackBarLabs.Api.Tests
         }
 
         public async Task<TResult> OptionsAsync<TController, TResult>(object resource,
-                Func<HttpResponseMessage, HttpMethod[], TResult> callback)
-            where TController : ApiController
+                Func<IHttpResponse, HttpMethod[], TResult> callback)
         {
             var controller = GetController<TController>();
             var response = await InvokeControllerAsync(controller, HttpMethod.Options,
@@ -355,13 +343,12 @@ namespace BlackBarLabs.Api.Tests
             return result;
         }
 
-        private HttpRequestMessage GetRequest<TController>(TController controller, HttpMethod method)
-            where TController : ApiController
+        private IHttpRequest GetRequest<TController>(TController controller, HttpMethod method)
         {
             var hostingLocation = Microsoft.Azure.CloudConfigurationManager.GetSetting(EastFive.Api.Tests.AppSettings.ServerUrl);
             if (String.IsNullOrWhiteSpace(hostingLocation))
                 hostingLocation = "http://example.com";
-            var httpRequest = new HttpRequestMessage(method, hostingLocation);
+            var httpRequest = new IHttpRequest(method, hostingLocation);
             var config = new HttpConfiguration();
 
             var routesApi = Microsoft.Azure.CloudConfigurationManager.GetSetting(EastFive.Api.Tests.AppSettings.RoutesApi);
@@ -408,23 +395,21 @@ namespace BlackBarLabs.Api.Tests
         public Dictionary<string, string> Headers { get; set; }
 
         private TController GetController<TController>()
-            where TController : ApiController
         {
             var controller = Activator.CreateInstance<TController>();
             return controller;
         }
 
-        private delegate T InvokeControllerDelegate<T>(HttpRequestMessage request, MockPrincipal user);
+        private delegate T InvokeControllerDelegate<T>(IHttpRequest request, MockPrincipal user);
 
-        private async Task<HttpResponseMessage> InvokeControllerAsync<TController>(
+        private async Task<IHttpResponse> InvokeControllerAsync<TController>(
                 TController controller,
                 HttpMethod method,
                 InvokeControllerDelegate<object> callback)
-            where TController : ApiController
         {
             return await InvokeControllerAsync<TController>(
                 controller, method,
-                (HttpRequestMessage httpRequest, System.Reflection.MethodInfo methodInfo) =>
+                (IHttpRequest httpRequest, System.Reflection.MethodInfo methodInfo) =>
                 {
                     var resource = callback(httpRequest, controller.User as MockPrincipal);
                     return methodInfo.GetParameters()
@@ -456,10 +441,9 @@ namespace BlackBarLabs.Api.Tests
                 });
         }
 
-        private async Task<HttpResponseMessage> InvokeControllerAsync<TController>(
+        private async Task<IHttpResponse> InvokeControllerAsync<TController>(
                 TController controller,
                 HttpMethod method)
-            where TController : ApiController
         {
             return await InvokeControllerAsync<TController>(
                 controller, method,
@@ -471,11 +455,10 @@ namespace BlackBarLabs.Api.Tests
                 });
         }
 
-        private async Task<HttpResponseMessage> InvokeControllerAsync<TController>(
+        private async Task<IHttpResponse> InvokeControllerAsync<TController>(
                 TController controller,
                 HttpMethod method,
-                Func<HttpRequestMessage, System.Reflection.MethodInfo, object []> getParameters)
-            where TController : ApiController
+                Func<IHttpRequest, System.Reflection.MethodInfo, object []> getParameters)
         {
             var httpRequest = GetRequest(controller, method);
 
@@ -491,9 +474,9 @@ namespace BlackBarLabs.Api.Tests
                 var resourceFromControllerTask = (Task<IHttpActionResult>)methodInfo.Invoke(controller, parameters);
                 resourceFromController = await resourceFromControllerTask;
             }
-            else if (methodInfo.ReturnType.GUID == typeof(HttpResponseMessage).GUID)
+            else if (methodInfo.ReturnType.GUID == typeof(IHttpResponse).GUID)
             {
-                var responseMessage = (HttpResponseMessage)methodInfo.Invoke(controller, parameters);
+                var responseMessage = (IHttpResponse)methodInfo.Invoke(controller, parameters);
                 resourceFromController = responseMessage.ToActionResult();
             }
             else
@@ -511,11 +494,10 @@ namespace BlackBarLabs.Api.Tests
             return response;
         }
         
-        private async Task<HttpResponseMessage> InvokeControllerAsync<TController>(
+        private async Task<IHttpResponse> InvokeControllerAsync<TController>(
                 TController controller,
                 HttpMethod method,
-                Action<HttpRequestMessage, System.Reflection.MethodInfo> callback)
-            where TController : ApiController
+                Action<IHttpRequest, System.Reflection.MethodInfo> callback)
         {
             return await InvokeControllerAsync<TController>(controller, method,
                 (request, methodInfo) =>
