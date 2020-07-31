@@ -1,9 +1,4 @@
-﻿using EastFive.Api.Azure;
-using EastFive.Api.Tests.Mocks;
-using EastFive.Azure.Auth;
-using EastFive.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -12,7 +7,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Routing;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using EastFive.Api.Azure;
+using EastFive.Api.Tests.Mocks;
+using EastFive.Azure.Auth;
+using EastFive.Extensions;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace EastFive.Api.Tests
 {
