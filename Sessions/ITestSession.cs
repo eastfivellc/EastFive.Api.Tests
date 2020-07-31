@@ -1,5 +1,4 @@
-﻿using EastFive.Api;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -12,30 +11,49 @@ namespace BlackBarLabs.Api.Tests
 {
     public interface ITestSession
     {
-        Task<IHttpResponse> GetAsync<TController>(object resource,
-                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>));
+        [Obsolete]
+        Task<TResult> GetAsync<TController, TResult>(
+                Func<HttpResponseMessage, TResult> callback)
+            where TController : ApiController;
+        
+        Task<HttpResponseMessage> GetAsync<TController>(object resource,
+                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
+            where TController : ApiController;
+
+        [Obsolete]
+        Task<TResult> GetAsync<TController, TResult>(object resource,
+                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
+            where TController : ApiController;
 
         Task<TResult> GetAsync<TController, TResult>(object resource,
-                HttpActionDelegate<object, TResult> callback);
+                HttpActionDelegate<object, TResult> callback)
+            where TController : ApiController;
 
-        Task<IHttpResponse> PostAsync<TController>(object resource,
-                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>));
+        Task<HttpResponseMessage> PostAsync<TController>(object resource,
+                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
+            where TController : ApiController;
         
-        Task<IHttpResponse> PostMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback);
+        Task<HttpResponseMessage> PostMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
+            where TController : ApiController;
 
-        Task<IHttpResponse> PutAsync<TController>(object resource,
-                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>));
+        Task<HttpResponseMessage> PutAsync<TController>(object resource,
+                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
+            where TController : ApiController;
 
-        Task<IHttpResponse> PutMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback);
+        Task<HttpResponseMessage> PutMultipartAsync<TController>(Action<MultipartContent> multipartContentCallback)
+            where TController : ApiController;
 
-        Task<IHttpResponse> DeleteAsync<TController>(object resource,
-                Action<IHttpRequest> mutateRequest = default(Action<IHttpRequest>));
+        Task<HttpResponseMessage> DeleteAsync<TController>(object resource,
+                Action<HttpRequestMessage> mutateRequest = default(Action<HttpRequestMessage>))
+            where TController : ApiController;
         
         Task<TResult> OptionsAsync<TController, TResult>(object resource,
-                Func<IHttpResponse, HttpMethod[], TResult> callback);
+                Func<HttpResponseMessage, HttpMethod[], TResult> callback)
+            where TController : ApiController;
 
         Task<TResult> OptionsAsync<TController, TResult>(
-                Func<IHttpResponse, HttpMethod[], TResult> callback);
+                Func<HttpResponseMessage, HttpMethod[], TResult> callback)
+            where TController : ApiController;
 
         Dictionary<string, string> Headers { get; set; }
 
