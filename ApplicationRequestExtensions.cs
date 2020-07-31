@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Routing;
+using Microsoft.AspNetCore.Mvc.Routing;
 using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -54,42 +54,42 @@ namespace EastFive.Api.Tests
 
             var httpRequest = new HttpRequestMessage(); // $"{hostingLocation}/{routesApi[0]}/{functionViewControllerAttribute.Route}");
             httpRequest.Method = method;
-            var config = new HttpConfiguration();
+            //var config = new HttpConfiguration();
 
-            var firstApiRoute = routesApi.Select(
-                routeName =>
-                {
-                    var route = config.Routes.MapHttpRoute(
-                        name: routeName,
-                        routeTemplate: routeName + "/{controller}/{id}",
-                        defaults: new { id = RouteParameter.Optional }
-                    );
-                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
-                    return route;
-                }).First();
+            //var firstApiRoute = routesApi.Select(
+            //    routeName =>
+            //    {
+            //        var route = config.Routes.MapHttpRoute(
+            //            name: routeName,
+            //            routeTemplate: routeName + "/{controller}/{id}",
+            //            defaults: new { id = RouteParameter.Optional }
+            //        );
+            //        httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+            //        return route;
+            //    }).First();
 
-            IHttpRoute[] mvcRoutes = routesMvcCSV.Split(new[] { ',' }).Select(
-                routeName =>
-                {
-                    var route = config.Routes.MapHttpRoute(
-                        name: routeName,
-                        routeTemplate: "{controller}/{action}/{id}",
-                        defaults: new { controller = "Default", action = "Index", id = "" }
-                        );
-                    httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
-                    return route;
-                }).ToArray();
+            //IHttpRoute[] mvcRoutes = routesMvcCSV.Split(new[] { ',' }).Select(
+            //    routeName =>
+            //    {
+            //        var route = config.Routes.MapHttpRoute(
+            //            name: routeName,
+            //            routeTemplate: "{controller}/{action}/{id}",
+            //            defaults: new { controller = "Default", action = "Index", id = "" }
+            //            );
+            //        httpRequest.SetRouteData(new System.Web.Http.Routing.HttpRouteData(route));
+            //        return route;
+            //    }).ToArray();
 
-            var urlTemplate = $"{hostingLocation}/{firstApiRoute.RouteTemplate}";
-            //var routeValues = firstApiRoute.Defaults.SelectValues().Append(functionViewControllerAttribute.Route).Reverse().ToArray();
-            var requestUriString = // String.Format( urlTemplate, routeValues);
-                urlTemplate
-                    .Replace("{controller}", functionViewControllerAttribute.Route)
-                    .Replace("/{id}", string.Empty);
+            //var urlTemplate = $"{hostingLocation}/{firstApiRoute.RouteTemplate}";
+            ////var routeValues = firstApiRoute.Defaults.SelectValues().Append(functionViewControllerAttribute.Route).Reverse().ToArray();
+            //var requestUriString = // String.Format( urlTemplate, routeValues);
+            //    urlTemplate
+            //        .Replace("{controller}", functionViewControllerAttribute.Route)
+            //        .Replace("/{id}", string.Empty);
 
-            httpRequest.RequestUri = new Uri(requestUriString);
+            //httpRequest.RequestUri = new Uri(requestUriString);
 
-            httpRequest.SetConfiguration(config);
+            //httpRequest.SetConfiguration(config);
 
             foreach (var headerKVP in application.Headers)
                 httpRequest.Headers.Add(headerKVP.Key, headerKVP.Value);
@@ -101,11 +101,11 @@ namespace EastFive.Api.Tests
         {
             var httpRequest = new HttpRequestMessage(); // $"{hostingLocation}/{routesApi[0]}/{functionViewControllerAttribute.Route}");
             httpRequest.Method = method;
-            var config = new HttpConfiguration();
+            //var config = new HttpConfiguration();
 
-            httpRequest.RequestUri = location;
+            //httpRequest.RequestUri = location;
 
-            httpRequest.SetConfiguration(config);
+            //httpRequest.SetConfiguration(config);
 
             foreach (var headerKVP in application.Headers)
                 httpRequest.Headers.Add(headerKVP.Key, headerKVP.Value);
@@ -288,13 +288,13 @@ namespace EastFive.Api.Tests
 
         public static Task<TResult> MethodAsync<TResource, TResultInner, TResult>(this ITestApplication application,
                 HttpMethod method,
-                Func<HttpRequestMessage, HttpRequestMessage> requestMutation,
+                Func<IHttpRequest, IHttpRequest> requestMutation,
             Func<TResultInner, TResult> onExecuted)
         {
             return typeof(TResource).GetCustomAttribute<FunctionViewControllerAttribute, Task<TResult>>(
                 async fvcAttr =>
                 {
-                    var requestGeneric = application.GetRequest(method, fvcAttr);
+                    var requestGeneric = application.GetHttpRequest();
                     var request = requestMutation(requestGeneric);
 
                     var response = await application.SendAsync(request);
@@ -322,67 +322,6 @@ namespace EastFive.Api.Tests
                     Assert.Fail($"Type {typeof(TResource).FullName} does not have FunctionViewControllerAttribute");
                     throw new Exception();
                 });
-        }
-
-        public static async Task<TResult> UrlAsync<TResource, TResultInner, TResult>(this ITestApplication application,
-                HttpMethod method, Uri location,
-            Func<TResultInner, TResult> onExecuted,
-
-            Func<TResource, TResult> onContent = default(Func<TResource, TResult>),
-            Func<TResource[], TResult> onContents = default(Func<TResource[], TResult>),
-            Func<object[], TResult> onContentObjects = default(Func<object[], TResult>),
-            Func<string, TResult> onHtml = default(Func<string, TResult>),
-            Func<TResult> onCreated = default(Func<TResult>),
-            Func<TResource, string, TResult> onCreatedBody = default(Func<TResource, string, TResult>),
-            Func<TResult> onUpdated = default(Func<TResult>),
-
-            Func<Uri, TResult> onRedirect = default(Func<Uri, TResult>),
-
-            Func<TResult> onBadRequest = default(Func<TResult>),
-            Func<TResult> onUnauthorized = default(Func<TResult>),
-            Func<TResult> onExists = default(Func<TResult>),
-            Func<TResult> onNotFound = default(Func<TResult>),
-            Func<Type, TResult> onRefDoesNotExistsType = default(Func<Type, TResult>),
-            Func<string, TResult> onFailure = default(Func<string, TResult>),
-
-            Func<TResult> onNotImplemented = default(Func<TResult>),
-            Func<IExecuteAsync, Task<TResult>> onExecuteBackground = default(Func<IExecuteAsync, Task<TResult>>))
-        {
-            application.CreatedResponse<TResource, TResult>(onCreated);
-            application.CreatedBodyResponse<TResource, TResult>(onCreatedBody);
-            application.BadRequestResponse<TResource, TResult>(onBadRequest);
-            application.AlreadyExistsResponse<TResource, TResult>(onExists);
-            application.RefNotFoundTypeResponse(onRefDoesNotExistsType);
-            application.RedirectResponse<TResource, TResult>(onRedirect);
-            application.NotImplementedResponse<TResource, TResult>(onNotImplemented);
-
-            application.ContentResponse(onContent);
-            application.ContentTypeResponse<TResource, TResult>((body, contentType) => onContent(body));
-            application.MultipartContentResponse(onContents);
-            if (!onContentObjects.IsDefaultOrNull())
-                application.MultipartContentObjectResponse<TResource, TResult>(onContentObjects);
-            application.NotFoundResponse<TResource, TResult>(onNotFound);
-            application.HtmlResponse<TResource, TResult>(onHtml);
-
-            application.NoContentResponse<TResource, TResult>(onUpdated);
-            application.UnauthorizedResponse<TResource, TResult>(onUnauthorized);
-            application.GeneralConflictResponse<TResource, TResult>(onFailure);
-            application.ExecuteBackgroundResponse<TResource, TResult>(onExecuteBackground);
-
-            var request = application.GetRequest(method, location);
-            var response = await application.SendAsync(request);
-
-            if (response is IDidNotOverride)
-            {
-                (response as IDidNotOverride).OnFailure();
-            }
-
-            if (!(response is IReturnResult))
-                Assert.Fail($"Failed to override response with status code `{response.StatusCode}` for {typeof(TResource).FullName}\nResponse:{response.ReasonPhrase}");
-
-            var attachedResponse = response as IReturnResult;
-            var result = attachedResponse.GetResultCasted<TResultInner>();
-            return onExecuted(result);
         }
 
         private static Uri AssignQueryExpressions<TResource>(this Uri baseUri, ITestApplication application, Expression<Action<TResource>>[] parameters)

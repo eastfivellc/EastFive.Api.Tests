@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BlackBarLabs.Linq;
 using EastFive.Security.SessionServer;
 using System.Net.Http;
 using System.Security.Claims;
@@ -11,16 +10,20 @@ using EastFive.Api.Azure.Credentials;
 using EastFive.Serialization;
 using EastFive.Api.Azure;
 using EastFive.Api.Controllers;
-using System.Web.Http.Routing;
-using BlackBarLabs.Api;
+
+using Microsoft.AspNetCore.Mvc.Routing;
+
 using Newtonsoft.Json;
+
 using EastFive.Azure.Auth;
 using EastFive.Extensions;
 using EastFive.Reflection;
+using EastFive.Azure.Auth.CredentialProviders;
+using EastFive.Azure;
 
 namespace EastFive.Api.Tests
 {
-    [Azure.Credentials.Attributes.IntegrationName(IntegrationName)]
+    [IntegrationName(IntegrationName)]
     public class ProvideLoginMock : IdentityServerConfiguration<EastFive.Security.SessionServer.Tests.Controllers.ActorController>,
         IProvideLogin, IConfigureIdentityServer, IProvideLoginManagement, IProvideToken, IProvideSession
     {
@@ -35,7 +38,7 @@ namespace EastFive.Api.Tests
         public const string extraParamToken = "token";
         public const string extraParamState = "state";
 
-        [Azure.Credentials.Attributes.IntegrationName(IntegrationName)]
+        [IntegrationName(IntegrationName)]
         public static Task<TResult> InitializeAsync<TResult>(
             Func<IProvideAuthorization, TResult> onProvideAuthorization,
             Func<TResult> onProvideNothing,
@@ -223,7 +226,7 @@ namespace EastFive.Api.Tests
                 IDictionary<string, string> extraParameters,
                 Method authentication, Authorization authorization,
                 Uri baseUri,
-                AzureApplication webApiApplication, 
+                IApiApplication webApiApplication, 
             Func<Guid, TResult> onCreatedMapping,
             Func<TResult> onAllowSelfServeAccounts,
             Func<Uri, TResult> onInterceptProcess,
@@ -265,7 +268,7 @@ namespace EastFive.Api.Tests
                 IDictionary<string, string> extraParameters,
                 Method authentication, Authorization authorization,
                 Uri baseUri,
-                AzureApplication webApiApplication,
+                IApiApplication webApiApplication,
             Func<Guid, object> onCreatedMapping,
             Func<object> onAllowSelfServeAccounts,
             Func<Uri, object> onInterceptProcess,
@@ -277,9 +280,10 @@ namespace EastFive.Api.Tests
         {
             await 1.AsTask();
         }
+
     }
 
-    [FunctionViewController6(
+    [FunctionViewController(
         Route = "MockRedirection",
         Resource = typeof(Redirection),
         ContentType = "x-application/auth-redirection.mock",
@@ -295,17 +299,17 @@ namespace EastFive.Api.Tests
         public string token;
 
         [HttpGet(MatchAllParameters = false)]
-        public static async Task<HttpResponseMessage> Get(
+        public static async Task<IHttpResponse> Get(
                 [OptionalQueryParameter(Name = ProvideLoginMock.extraParamState)]IRefOptional<Authorization> authorizationRef,
                 [QueryParameter(Name = ProvideLoginMock.extraParamToken)]string token,
-                AzureApplication application, UrlHelper urlHelper,
-                HttpRequestMessage request,
+                IAzureApplication application, IProvideUrl urlHelper,
+                IHttpRequest request,
             RedirectResponse redirectResponse,
             ServiceUnavailableResponse onNoServiceResponse,
             BadRequestResponse onBadCredentials,
             GeneralConflictResponse onFailure)
         {
-            var authentication = await EastFive.Azure.Auth.Method.ByMethodName(
+            var authentication = EastFive.Azure.Auth.Method.ByMethodName(
                 ProvideLoginMock.IntegrationName, application);
             var parameters = new Dictionary<string, string>()
                     {

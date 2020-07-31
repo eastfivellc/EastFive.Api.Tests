@@ -177,17 +177,11 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-<<<<<<< HEAD
     <PostBuildEvent>
       if "$(ConfigurationName)" == "Release" (
       xcopy /Y "$(TargetPath)" "$(SolutionDir)\NuGet.BlackBarLabs.Api.Tests\lib\"
       )
     </PostBuildEvent>
-=======
-    <PostBuildEvent>if "$(ConfigurationName)" == "Release" (
-    xcopy /Y "$(TargetPath)" "$(SolutionDir)\NuGet.BlackBarLabs.Api.Tests\lib\"
-)</PostBuildEvent>
->>>>>>> parent of 27ef68b... Merge branch 'master' of github.com:eastfivellc/EastFive.Api.Tests into framework
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
