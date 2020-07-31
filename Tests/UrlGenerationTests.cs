@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Routing;
+using System.Web.Http.Routing;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -43,7 +43,7 @@ namespace EastFive.Api.Tests
             //    .FunctionAsync();
         }
 
-        [FunctionViewController(
+        [FunctionViewController4(
             Route = "MyQueryableResource",
             Resource = typeof(QueryableResource),
             ContentType = "x-application/queryableresource",
@@ -99,7 +99,7 @@ namespace EastFive.Api.Tests
             public int numberMaybe;
         }
 
-        [FunctionViewController(
+        [FunctionViewController4(
             Route = "OtherResource",
             Resource = typeof(OtherResource),
             ContentType = "x-application/other-resource",

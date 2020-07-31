@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EastFive.Security.SessionServer.Tests.Controllers
 {
-    public class ActorController 
+    public class ActorController : BlackBarLabs.Api.Controllers.BaseController
     {
     }
 }
