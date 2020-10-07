@@ -298,7 +298,7 @@ namespace EastFive.Api.Tests
         public static async Task<HttpResponseMessage> Get(
                 [OptionalQueryParameter(Name = ProvideLoginMock.extraParamState)]IRefOptional<Authorization> authorizationRef,
                 [QueryParameter(Name = ProvideLoginMock.extraParamToken)]string token,
-                AzureApplication application, UrlHelper urlHelper,
+                AzureApplication application, IInvokeApplication urlHelper,
                 HttpRequestMessage request,
             RedirectResponse redirectResponse,
             ServiceUnavailableResponse onNoServiceResponse,
@@ -308,9 +308,9 @@ namespace EastFive.Api.Tests
             var authentication = await EastFive.Azure.Auth.Method.ByMethodName(
                 ProvideLoginMock.IntegrationName, application);
             var parameters = new Dictionary<string, string>()
-                    {
-                        { ProvideLoginMock.extraParamToken, token },
-                    };
+            {
+                { ProvideLoginMock.extraParamToken, token },
+            };
             if(authorizationRef.HasValue)
                 parameters.Add(ProvideLoginMock.extraParamState, authorizationRef.id.ToString());
 
@@ -318,7 +318,7 @@ namespace EastFive.Api.Tests
                     parameters,
                     application,
                     request, urlHelper,
-                (redirect) =>
+                (redirect, accountIdMaybe) =>
                 {
                     var response = redirectResponse(redirect);
                     return response;
